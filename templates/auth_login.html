@@ -1,0 +1,67 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<main class="relative mx-auto grid max-w-[1100px] gap-6 px-6 py-12 lg:grid-cols-12 lg:gap-10 lg:px-12">
+  <section class="cyber-card p-8 sm:p-10 lg:col-span-7">
+    <span class="pill pill-violet-soft">Вход в терминал</span>
+    <h1 class="heading mt-4 text-3xl font-bold">С возвращением</h1>
+    <p class="mt-2 text-sm text-muted">Имя пользователя или email и пароль.</p>
+
+    <form id="login-form" class="mt-6 space-y-4" data-persist>
+      <div>
+        <label class="field-label" for="login-id">Имя или email</label>
+        <input id="login-id" name="identifier" type="text" autocomplete="username" class="field" required>
+      </div>
+      <div>
+        <label class="field-label" for="login-pass">Пароль</label>
+        <input id="login-pass" name="password" type="password" autocomplete="current-password" class="field" required>
+      </div>
+      <p id="login-error" class="hidden text-xs font-bold uppercase tracking-wide" style="color:var(--danger);"></p>
+      <button type="submit" class="btn btn-violet btn-block">Войти</button>
+    </form>
+
+    <div class="divider"></div>
+    <p class="text-sm text-muted">Нет аккаунта? <a href="/auth/register" class="font-bold text-violet hover:underline">Создать</a></p>
+    <p class="mt-2 text-xs text-muted">Или <a href="/auth/dev" class="text-violet hover:underline">войти как демо</a> (anna_demo / boris_demo / carl_demo)</p>
+  </section>
+
+  <aside class="cyber-card p-8 lg:col-span-5">
+    <span class="pill">Возможности</span>
+    <h2 class="heading mt-4 text-xl font-bold">Что внутри</h2>
+    <ul class="mt-5 space-y-4 text-sm text-muted">
+      <li class="flex items-start gap-3"><iconify-icon icon="lucide:gavel" class="mt-1 text-violet"></iconify-icon> Реальный аукцион с анти-снайпингом</li>
+      <li class="flex items-start gap-3"><iconify-icon icon="lucide:share-2" class="mt-1 text-violet"></iconify-icon> Авто-проверка шары через VK</li>
+      <li class="flex items-start gap-3"><iconify-icon icon="lucide:credit-card" class="mt-1 text-violet"></iconify-icon> Карта + баланс для мгновенной оплаты</li>
+      <li class="flex items-start gap-3"><iconify-icon icon="lucide:ticket" class="mt-1 text-violet"></iconify-icon> Электронный билет после победы</li>
+    </ul>
+  </aside>
+</main>
+
+<script>
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const err = document.getElementById('login-error');
+  err.classList.add('hidden');
+  try {
+    const resp = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        identifier: document.getElementById('login-id').value.trim(),
+        password: document.getElementById('login-pass').value
+      })
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) {
+      const map = { invalid_credentials: 'Неверные данные', invalid_payload: 'Заполните поля' };
+      err.textContent = map[data.error] || ('Ошибка: ' + (data.error || resp.status));
+      err.classList.remove('hidden');
+      return;
+    }
+    window.location.href = data.redirect || '/';
+  } catch (e) {
+    err.textContent = 'Сетевая ошибка';
+    err.classList.remove('hidden');
+  }
+});
+</script>
+{% endblock %}

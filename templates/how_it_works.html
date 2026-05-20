@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block content %}
+<main class="relative mx-auto max-w-[1100px] px-6 py-10 lg:px-12 lg:py-14">
+  <a href="/" class="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-muted hover:text-violet">
+    <iconify-icon icon="lucide:arrow-left" class="text-base"></iconify-icon> <span data-i18n="how.back">Назад на главную</span>
+  </a>
+
+  <header class="mt-6 mb-10">
+    <p class="text-sm font-bold uppercase tracking-wider text-violet" data-i18n="how.eyebrow">Инструкция</p>
+    <h1 class="heading mt-2 text-4xl font-extrabold leading-tight md:text-5xl" data-i18n="how.title">Как работает BidStage</h1>
+    <p class="mt-3 max-w-2xl text-base leading-relaxed text-muted" data-i18n="how.subtitle">Аукцион концертных лотов: чем выше ставка — тем ближе вы к билету. Чтобы ставка засчиталась, нужно поделиться лотом в соцсети.</p>
+  </header>
+
+  <section class="grid gap-5 md:grid-cols-2 lg:grid-cols-3 mb-10">
+    <div class="cyber-card p-6">
+      <span class="pill pill-violet-soft mb-3"><iconify-icon icon="lucide:rocket"></iconify-icon> <span data-i18n="how.start">Старт</span></span>
+      <h3 class="heading mt-3 text-lg font-bold" data-i18n="how.s1.title">01 — Регистрация</h3>
+      <p class="mt-2 text-sm leading-relaxed text-white" data-i18n="how.s1.body">Создайте аккаунт по email или войдите через демо-юзера. Привяжите карту в профиле для мгновенной оплаты.</p>
+    </div>
+    <div class="cyber-card p-6">
+      <span class="pill pill-violet-soft mb-3"><iconify-icon icon="lucide:gavel"></iconify-icon> <span data-i18n="how.bid">Ставка</span></span>
+      <h3 class="heading mt-3 text-lg font-bold" data-i18n="how.s2.title">02 — Сделайте ставку</h3>
+      <p class="mt-2 text-sm leading-relaxed text-white" data-i18n="how.s2.body">Минимум — текущая цена + шаг. Доступна автоставка: установите максимум, система сама перебивает соперников.</p>
+    </div>
+    <div class="cyber-card p-6">
+      <span class="pill pill-violet-soft mb-3"><iconify-icon icon="lucide:share-2"></iconify-icon> <span data-i18n="how.share">Шара</span></span>
+      <h3 class="heading mt-3 text-lg font-bold" data-i18n="how.s3.title">03 — Поделитесь лотом</h3>
+      <p class="mt-2 text-sm leading-relaxed text-white" data-i18n="how.s3.body">Опубликуйте пост в VK или FB и пришлите ссылку на пост. Система автоматически проверит — если удалите пост, ставка аннулируется.</p>
+    </div>
+    <div class="cyber-card p-6">
+      <span class="pill pill-amber-soft mb-3"><iconify-icon icon="lucide:timer-reset"></iconify-icon> <span data-i18n="how.timer">Таймер</span></span>
+      <h3 class="heading mt-3 text-lg font-bold" data-i18n="how.s4.title">04 — Анти-снайпинг</h3>
+      <p class="mt-2 text-sm leading-relaxed text-white" data-i18n="how.s4.body">Ставка в последние 3 минуты автоматически продлевает торги на 180 секунд. Это защита от поздних снайперов.</p>
+    </div>
+    <div class="cyber-card p-6">
+      <span class="pill pill-success mb-3"><iconify-icon icon="lucide:trophy"></iconify-icon> <span data-i18n="how.win">Победа</span></span>
+      <h3 class="heading mt-3 text-lg font-bold" data-i18n="how.s5.title">05 — Оплата</h3>
+      <p class="mt-2 text-sm leading-relaxed text-white" data-i18n="how.s5.body">Победитель оплачивает выигрыш картой за 24 часа. Не оплатил — лот переходит к следующему биддеру.</p>
+    </div>
+    <div class="cyber-card p-6">
+      <span class="pill pill-success mb-3"><iconify-icon icon="lucide:ticket"></iconify-icon> <span data-i18n="how.ticket">Билет</span></span>
+      <h3 class="heading mt-3 text-lg font-bold" data-i18n="how.s6.title">06 — Электронный билет</h3>
+      <p class="mt-2 text-sm leading-relaxed text-white" data-i18n="how.s6.body">После оплаты вы получаете уникальный 32-значный код билета. Деньги в эскроу — продавец получит их только после подтверждения доставки.</p>
+    </div>
+  </section>
+
+  <section class="cyber-card p-6 sm:p-8 mb-10" style="background:rgba(124,92,252,0.05);border-color:rgba(124,92,252,0.25);">
+    <div class="grid gap-6 md:grid-cols-3">
+      <div>
+        <p class="text-sm font-bold uppercase tracking-wider text-violet" data-i18n="how.protectBuyer">Защита покупателя</p>
+        <p class="mt-2 text-sm leading-relaxed text-white" data-i18n="how.protectBuyerBody">Деньги хранятся в эскроу. Продавец получит выплату только после того, как вы подтвердите получение билета.</p>
+      </div>
+      <div>
+        <p class="text-sm font-bold uppercase tracking-wider text-violet" data-i18n="how.protectSeller">Защита продавца</p>
+        <p class="mt-2 text-sm leading-relaxed text-white" data-i18n="how.protectSellerBody">Каждая ставка обеспечена обязательным шерингом и проверкой через VK API. Накрутить ставки сложнее.</p>
+      </div>
+      <div>
+        <p class="text-sm font-bold uppercase tracking-wider text-violet" data-i18n="how.cascade">Каскад платежей</p>
+        <p class="mt-2 text-sm leading-relaxed text-white" data-i18n="how.cascadeBody">Если победитель не оплатил — лот переходит ко второму. Не оплатил и он — снова в продажу с тем же таймером.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid gap-5 md:grid-cols-2">
+    <div class="cyber-card p-6">
+      <p class="text-sm font-bold uppercase tracking-wider text-amber" data-i18n="how.fees">Тарифы продавца</p>
+      <ul class="mt-4 space-y-2.5 text-sm leading-relaxed text-white">
+        <li class="flex justify-between"><span data-i18n="how.feeListing">Листинг</span><span class="font-bold">$5</span></li>
+        <li class="flex justify-between"><span data-i18n="how.feeFeatured">Поднять в топ (Featured)</span><span class="font-bold text-amber">+$10</span></li>
+        <li class="flex justify-between"><span data-i18n="how.feeFinal">Комиссия с продажи</span><span class="font-bold">10%</span></li>
+      </ul>
+      <p class="mt-4 text-xs text-muted" data-i18n="how.feesNote">Если лот не продаётся, листинг не возвращается, но процент с продажи не списывается.</p>
+    </div>
+    <div class="cyber-card p-6">
+      <p class="text-sm font-bold uppercase tracking-wider text-amber" data-i18n="how.providers">Платёжные провайдеры</p>
+      <ul class="mt-4 space-y-2.5 text-sm leading-relaxed text-white">
+        <li class="flex justify-between"><span>🇦🇲 <span data-i18n="how.armenia">Армения</span></span><span class="font-bold">IDram</span></li>
+        <li class="flex justify-between"><span>🇷🇺 <span data-i18n="how.russia">Россия</span></span><span class="font-bold">YooKassa</span></li>
+        <li class="flex justify-between"><span>🌍 <span data-i18n="how.world">Другие страны</span></span><span class="font-bold">Stripe</span></li>
+      </ul>
+      <p class="mt-4 text-xs text-muted" data-i18n="how.providerNote">Система автоматически выбирает провайдера по стране в вашем профиле.</p>
+    </div>
+  </section>
+
+  <div class="mt-10 flex flex-wrap gap-3">
+    <a href="/" class="btn btn-violet">
+      <iconify-icon icon="lucide:home" class="text-base"></iconify-icon>
+      <span data-i18n="how.toHome">На главную</span>
+    </a>
+    {% if not me %}
+    <a href="/auth/register" class="btn btn-ghost">
+      <iconify-icon icon="lucide:user-plus" class="text-base"></iconify-icon>
+      <span data-i18n="how.signup">Создать аккаунт</span>
+    </a>
+    {% else %}
+    <a href="/sell" class="btn btn-ghost">
+      <iconify-icon icon="lucide:plus" class="text-base"></iconify-icon>
+      <span data-i18n="how.listLot">Выставить свой лот</span>
+    </a>
+    {% endif %}
+  </div>
+</main>
+{% endblock %}

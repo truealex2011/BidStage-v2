@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block content %}
+<main class="relative mx-auto max-w-[1280px] px-6 py-10 lg:px-12">
+
+  <header class="mt-6 mb-10 text-center">
+    <p class="text-sm font-bold uppercase tracking-wider text-amber" data-i18n="hall.eyebrow">🏆 Hall of fame</p>
+    <h1 class="heading mt-2 text-4xl font-extrabold leading-tight md:text-5xl" data-i18n="hall.title">Зал славы</h1>
+    <p class="mt-3 text-base text-muted" data-i18n="hall.subtitle">Лучшие лоты, самые упорные биддеры и легендарные битвы платформы.</p>
+  </header>
+
+  <section class="grid gap-5 md:grid-cols-2 lg:grid-cols-3 mb-12">
+    {% if awards.most_expensive %}
+    <div class="cyber-card p-6 relative overflow-hidden" style="border-color:rgba(240,165,0,0.4);">
+      <div class="absolute -right-8 -top-8 w-32 h-32 rounded-full" style="background:radial-gradient(circle,rgba(240,165,0,0.25),transparent 70%);"></div>
+      <span class="pill pill-amber" data-i18n="hall.mostExpensive">💎 Самый дорогой</span>
+      <h3 class="heading mt-4 text-xl font-bold" data-translate>{{ awards.most_expensive.title }}</h3>
+      <p class="text-xs uppercase tracking-wide text-muted mt-1" data-translate>{{ awards.most_expensive.artist }}</p>
+      <p class="mt-4 text-3xl font-bold text-amber">${{ '{:,.0f}'.format(awards.most_expensive.final_price_usd|float) }}</p>
+      <a href="/lot/{{ awards.most_expensive.id }}" class="btn btn-ghost btn-sm mt-4" data-i18n="hall.openLot">Открыть лот</a>
+    </div>
+    {% endif %}
+
+    {% if awards.hardest_battle %}
+    <div class="cyber-card p-6 relative overflow-hidden" style="border-color:rgba(255,77,109,0.4);">
+      <div class="absolute -right-8 -top-8 w-32 h-32 rounded-full" style="background:radial-gradient(circle,rgba(255,77,109,0.2),transparent 70%);"></div>
+      <span class="pill pill-danger" data-i18n="hall.hardestBattle">⚔️ Самая упорная битва</span>
+      <h3 class="heading mt-4 text-xl font-bold" data-translate>{{ awards.hardest_battle.title }}</h3>
+      <p class="text-xs uppercase tracking-wide text-muted mt-1" data-translate>{{ awards.hardest_battle.artist }}</p>
+      <p class="mt-4 text-3xl font-bold text-violet">{{ awards.hardest_battle.bid_count }}</p>
+      <p class="text-sm text-muted" data-i18n="hall.bidsMade">ставок сделано</p>
+      <a href="/lot/{{ awards.hardest_battle.id }}" class="btn btn-ghost btn-sm mt-4" data-i18n="hall.openLot">Открыть лот</a>
+    </div>
+    {% endif %}
+
+    {% if awards.biggest_growth %}
+    <div class="cyber-card p-6 relative overflow-hidden" style="border-color:rgba(0,200,150,0.4);">
+      <div class="absolute -right-8 -top-8 w-32 h-32 rounded-full" style="background:radial-gradient(circle,rgba(0,200,150,0.2),transparent 70%);"></div>
+      <span class="pill pill-success" data-i18n="hall.biggestGrowth">📈 Максимальный рост</span>
+      <h3 class="heading mt-4 text-xl font-bold" data-translate>{{ awards.biggest_growth.title }}</h3>
+      <p class="text-xs uppercase tracking-wide text-muted mt-1" data-translate>{{ awards.biggest_growth.artist }}</p>
+      <p class="mt-4 text-3xl font-bold text-success">+${{ '{:,.0f}'.format(awards.biggest_growth.price_growth|float) }}</p>
+      <p class="text-sm text-muted">${{ '{:,.0f}'.format(awards.biggest_growth.start_price_usd|float) }} → ${{ '{:,.0f}'.format(awards.biggest_growth.final_price|float) }}</p>
+      <a href="/lot/{{ awards.biggest_growth.id }}" class="btn btn-ghost btn-sm mt-4" data-i18n="hall.openLot">Открыть лот</a>
+    </div>
+    {% endif %}
+
+    {% if awards.top_buyer %}
+    <div class="cyber-card p-6 relative overflow-hidden" style="border-color:rgba(124,92,252,0.4);">
+      <div class="absolute -right-8 -top-8 w-32 h-32 rounded-full" style="background:radial-gradient(circle,rgba(124,92,252,0.25),transparent 70%);"></div>
+      <span class="pill pill-violet" data-i18n="hall.topBuyer">👑 Король покупателей</span>
+      <div class="mt-4 flex items-center gap-3">
+        <span class="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#7c5cfc] to-[#f0a500] text-base font-bold">{{ awards.top_buyer.username[:2]|upper }}</span>
+        <div>
+          <p class="text-lg font-bold">{{ awards.top_buyer.username }}</p>
+          <p class="text-xs text-muted">{{ awards.top_buyer.won_count }} <span data-i18n="hall.wins">побед</span></p>
+        </div>
+      </div>
+      <p class="mt-4 text-2xl font-bold text-violet">${{ '{:,.0f}'.format(awards.top_buyer.total_spent|float) }}</p>
+      <p class="text-sm text-muted" data-i18n="hall.totalSpent">общая сумма выигрышей</p>
+    </div>
+    {% endif %}
+
+    {% if awards.top_seller %}
+    <div class="cyber-card p-6 relative overflow-hidden" style="border-color:rgba(0,200,150,0.4);">
+      <div class="absolute -right-8 -top-8 w-32 h-32 rounded-full" style="background:radial-gradient(circle,rgba(0,200,150,0.2),transparent 70%);"></div>
+      <span class="pill pill-success" data-i18n="hall.topSeller">⭐ Топ продавец</span>
+      <div class="mt-4 flex items-center gap-3">
+        <span class="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#00c896] to-[#7c5cfc] text-base font-bold">{{ awards.top_seller.username[:2]|upper }}</span>
+        <div>
+          <p class="text-lg font-bold">{{ awards.top_seller.username }}</p>
+          <a href="/seller/{{ awards.top_seller.id }}" class="text-xs text-violet hover:underline" data-i18n="hall.profile">профиль продавца</a>
+        </div>
+      </div>
+      <p class="mt-4 text-2xl font-bold text-success">{{ awards.top_seller.sold_count }}</p>
+      <p class="text-sm text-muted" data-i18n="hall.soldLots">проданных лотов</p>
+    </div>
+    {% endif %}
+
+    {% if awards.most_persistent %}
+    <div class="cyber-card p-6 relative overflow-hidden" style="border-color:rgba(240,165,0,0.4);">
+      <div class="absolute -right-8 -top-8 w-32 h-32 rounded-full" style="background:radial-gradient(circle,rgba(240,165,0,0.2),transparent 70%);"></div>
+      <span class="pill pill-amber" data-i18n="hall.mostPersistent">🔥 Самый настойчивый</span>
+      <div class="mt-4 flex items-center gap-3">
+        <span class="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#f0a500] to-[#ff4d6d] text-base font-bold">{{ awards.most_persistent.username[:2]|upper }}</span>
+        <div>
+          <p class="text-lg font-bold">{{ awards.most_persistent.username }}</p>
+          <p class="text-xs text-muted" data-i18n="hall.neverGivesUp">никогда не сдаётся</p>
+        </div>
+      </div>
+      <p class="mt-4 text-2xl font-bold text-amber">{{ awards.most_persistent.bids_total }}</p>
+      <p class="text-sm text-muted" data-i18n="hall.totalBidsAllTime">ставок за всё время</p>
+    </div>
+    {% endif %}
+  </section>
+
+  <div class="text-center">
+    <a href="/" class="btn btn-violet">
+      <iconify-icon icon="lucide:gavel" class="text-base"></iconify-icon>
+      <span data-i18n="hall.joinAuction">Поучаствовать в торгах</span>
+    </a>
+  </div>
+</main>
+{% endblock %}

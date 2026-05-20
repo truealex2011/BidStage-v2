@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block content %}
+<main class="mx-auto max-w-3xl px-4 py-8 lg:px-12">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <p class="text-xs font-bold uppercase tracking-wider text-violet">🔔 Центр уведомлений</p>
+      <h1 class="heading mt-1 text-2xl font-bold">Уведомления</h1>
+      <p class="text-sm text-muted mt-1">Все системные сообщения, итоги аукционов, статусы оплат и эскроу.</p>
+    </div>
+    <button type="button" id="notif-mark-all" class="btn btn-violet btn-sm">Прочитать всё</button>
+  </div>
+
+  <div id="notif-list" class="flex flex-col gap-3">
+    {% for n in notifications %}
+    <article class="cyber-card p-4 {% if not n.read %}bs-notif-unread{% endif %}" data-notif-id="{{ n.id }}">
+      <div class="flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <p class="font-bold text-sm">{{ n.title }}</p>
+          <p class="text-sm text-muted mt-1" style="white-space:pre-wrap;">{{ n.body }}</p>
+          <p class="text-xs text-muted mt-2">{{ n.created_at_display }}</p>
+        </div>
+        <div class="flex flex-col items-end gap-2 flex-shrink-0">
+          {% if n.lot_id %}
+          <a href="/lot/{{ n.lot_id }}" class="btn btn-ghost btn-sm">Открыть лот</a>
+          {% endif %}
+          {% if not n.read %}
+          <button type="button" class="btn btn-violet btn-sm notif-mark-btn" data-id="{{ n.id }}">Я прочитал</button>
+          {% else %}
+          <span class="text-xs text-muted">Прочитано</span>
+          {% endif %}
+        </div>
+      </div>
+    </article>
+    {% else %}
+    <div class="cyber-card p-10 text-center">
+      <iconify-icon icon="lucide:bell-off" class="text-4xl text-muted"></iconify-icon>
+      <p class="mt-4 text-base font-bold">Уведомлений пока нет</p>
+      <p class="mt-1 text-sm text-muted">Здесь будут появляться итоги аукционов, статусы оплат и сообщения службы поддержки.</p>
+    </div>
+    {% endfor %}
+  </div>
+</main>
+
+<script>
+(function(){
+  const list = document.getElementById('notif-list');
+  if (!list) return;
+  list.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.notif-mark-btn');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    btn.disabled = true;
+    try {
+      const r = await fetch('/api/notifications/' + id + '/read', { method: 'POST' });
+      if (r.ok) {
+        const card = btn.closest('[data-notif-id]');
+        if (card) {
+          card.classList.remove('bs-notif-unread');
+          btn.outerHTML = '<span class="text-xs text-muted">Прочитано</span>';
+        }
+        if (window.bidstageNotifications) window.bidstageNotifications.reload();
+      }
+    } catch(_) { btn.disabled = false; }
+  });
+  const markAll = document.getElementById('notif-mark-all');
+  if (markAll) markAll.addEventListener('click', async () => {
+    markAll.disabled = true;
+    try {
+      const r = await fetch('/api/notifications/read-all', { method: 'POST' });
+      if (r.ok) {
+        list.querySelectorAll('[data-notif-id]').forEach(card => {
+          card.classList.remove('bs-notif-unread');
+          const btn = card.querySelector('.notif-mark-btn');
+          if (btn) btn.outerHTML = '<span class="text-xs text-muted">Прочитано</span>';
+        });
+        if (window.bidstageNotifications) window.bidstageNotifications.reload();
+      }
+    } finally { markAll.disabled = false; }
+  });
+})();
+</script>
+{% endblock %}

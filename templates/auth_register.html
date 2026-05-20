@@ -1,0 +1,93 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<main class="relative mx-auto grid max-w-[1100px] gap-6 px-6 py-12 lg:grid-cols-12 lg:gap-10 lg:px-12">
+  <section class="cyber-card p-8 sm:p-10 lg:col-span-7">
+    <span class="pill pill-amber-soft">Регистрация</span>
+    <h1 class="heading mt-4 text-3xl font-bold">Создать аккаунт</h1>
+    <p class="mt-2 text-sm text-muted">Имя — латиница/цифры/<span class="kbd">_ . -</span>, 3-32 символа. Пароль — от 8.</p>
+
+    <form id="register-form" class="mt-6 space-y-4" data-persist>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="field-label" for="reg-username">Имя пользователя</label>
+          <input id="reg-username" name="username" type="text" autocomplete="username" class="field" minlength="3" maxlength="32" required>
+        </div>
+        <div>
+          <label class="field-label" for="reg-email">Email <span class="text-faint normal-case">(опц.)</span></label>
+          <input id="reg-email" name="email" type="email" autocomplete="email" class="field">
+        </div>
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="field-label" for="reg-password">Пароль</label>
+          <input id="reg-password" name="password" type="password" autocomplete="new-password" class="field" minlength="8" required>
+        </div>
+        <div>
+          <label class="field-label" for="reg-country">Страна</label>
+          <select id="reg-country" name="country" class="field">
+            <option value="AM">Армения · IDram</option>
+            <option value="RU">Россия · YooKassa</option>
+            <option value="OTHER" selected>Другая · Stripe</option>
+          </select>
+        </div>
+      </div>
+
+      <p id="register-error" class="hidden text-xs font-bold uppercase tracking-wide" style="color:var(--danger);"></p>
+      <button type="submit" class="btn btn-violet btn-block">Создать аккаунт</button>
+    </form>
+
+    <div class="divider"></div>
+    <p class="text-sm text-muted">Уже есть? <a href="/auth/login" class="font-bold text-violet hover:underline">Войти</a></p>
+  </section>
+
+  <aside class="cyber-card p-8 lg:col-span-5">
+    <span class="pill">После регистрации</span>
+    <h2 class="heading mt-4 text-xl font-bold">4 шага до билета</h2>
+    <ol class="mt-5 space-y-3 text-sm">
+      <li class="flex items-start gap-3"><span class="pill pill-violet">1</span><span class="text-muted">Выбираете лот в каталоге</span></li>
+      <li class="flex items-start gap-3"><span class="pill pill-violet">2</span><span class="text-muted">Делаете ставку и шарите пост</span></li>
+      <li class="flex items-start gap-3"><span class="pill pill-violet">3</span><span class="text-muted">Привязываете карту в профиле</span></li>
+      <li class="flex items-start gap-3"><span class="pill pill-violet">4</span><span class="text-muted">Выигрываете → оплачиваете → получаете билет</span></li>
+    </ol>
+  </aside>
+</main>
+
+<script>
+document.getElementById('register-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const err = document.getElementById('register-error');
+  err.classList.add('hidden');
+  const payload = {
+    username: document.getElementById('reg-username').value.trim(),
+    email: document.getElementById('reg-email').value.trim(),
+    password: document.getElementById('reg-password').value,
+    country: document.getElementById('reg-country').value,
+  };
+  try {
+    const resp = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) {
+      const map = {
+        invalid_username: 'Имя 3-32 символа: латиница/цифры/_./-',
+        invalid_email: 'Неверный формат email',
+        weak_password: 'Пароль от 8 символов',
+        username_taken: 'Имя занято',
+        email_taken: 'Email уже используется',
+      };
+      err.textContent = map[data.error] || ('Ошибка: ' + (data.error || resp.status));
+      err.classList.remove('hidden');
+      return;
+    }
+    window.location.href = data.redirect || '/';
+  } catch (e) {
+    err.textContent = 'Сетевая ошибка';
+    err.classList.remove('hidden');
+  }
+});
+</script>
+{% endblock %}

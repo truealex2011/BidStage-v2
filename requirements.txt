@@ -1,0 +1,10 @@
+Flask>=3.0
+Flask-SocketIO>=5.3
+python-socketio>=5.11
+python-engineio>=4.9
+psycopg2-binary>=2.9
+python-dotenv>=1.0
+APScheduler>=3.10
+requests>=2.32
+simple-websocket>=1.0
+rapidfuzz>=3.9

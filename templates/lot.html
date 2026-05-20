@@ -1,0 +1,975 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<main class="relative mx-auto max-w-[1440px] px-4 py-6 lg:px-12 lg:py-8">
+  <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+    <a href="/" class="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-muted hover:text-violet">
+      <iconify-icon icon="lucide:arrow-left" class="text-base"></iconify-icon>
+      <span data-i18n="common.back">Назад</span>
+    </a>
+    <div class="flex items-center gap-2 flex-wrap">
+      {% if lot.status == 'active' %}
+      <span class="pill pill-amber"><span class="inline-block h-2 w-2 rounded-full animate-pulse" style="background:var(--secondary);"></span>LIVE</span>
+      <span class="pill pill-violet-soft"><iconify-icon icon="lucide:users" class="text-sm"></iconify-icon><span data-lot-viewers>0</span> <span data-i18n="lot.viewers">смотрят</span></span>
+      {% endif %}
+      {% if me %}
+      <button type="button" id="watch-btn" class="btn btn-ghost btn-sm {% if is_watching %}text-amber{% endif %}" data-lot-id="{{ lot.id }}" data-watching="{{ 'true' if is_watching else 'false' }}">
+        <iconify-icon icon="{% if is_watching %}lucide:bell-off{% else %}lucide:bell{% endif %}" class="text-base" id="watch-icon"></iconify-icon>
+        <span id="watch-label">{% if is_watching %}Отписаться{% else %}Следить{% endif %}</span>
+      </button>
+      {% endif %}
+      <button type="button" class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText(window.location.href).then(()=>window.bidstageToast&&window.bidstageToast('Ссылка скопирована','good'))">
+        <iconify-icon icon="lucide:share-2" class="text-base"></iconify-icon>
+      </button>
+    </div>
+  </div>
+
+  {% if lot.status == 'active' %}
+  <div class="mb-4 rounded overflow-hidden" style="height:4px;background:rgba(255,255,255,0.06);">
+    <div id="time-progress" class="h-full transition-all duration-1000" style="background:linear-gradient(90deg,var(--primary),var(--secondary));width:100%;"></div>
+  </div>
+  {% endif %}
+
+  <div class="grid grid-cols-1 gap-5 lg:grid-cols-12">
+    <div class="lg:col-span-8 space-y-4">
+      <article class="lot-card overflow-hidden" data-lot-id="{{ lot.id }}" data-status="{{ lot.status }}" data-price-amd="{{ lot.current_price_amd }}" data-end-offset="{{ lot.end_offset_seconds }}" data-end-ts="{{ lot.end_time_ms }}" data-step-amd="{{ lot.step_amd }}" data-step-usd="{{ lot.step_usd_display }}" data-min-usd="{{ lot.next_min_usd_display }}" data-name="{{ lot.title }}">
+        <div class="lot-cover {% if lot.image_url %}has-image{% endif %}" style="aspect-ratio:16/6;">
+          {% if lot.image_url %}
+          <img src="{{ lot.image_url }}" alt="{{ lot.title }}" class="absolute inset-0 w-full h-full object-cover" loading="lazy" onerror="this.remove();">
+          <div class="lot-cover-art" style="filter:none;background:linear-gradient(135deg,#7c5cfc 0%,#1a1a2e 50%,#f0a500 100%);z-index:-1;"></div>
+          {% else %}
+          <div class="lot-cover-art" style="filter:none;background:linear-gradient(135deg,#7c5cfc 0%,#1a1a2e 50%,#f0a500 100%);"></div>
+          {% endif %}
+          <div class="absolute inset-0 z-10" style="background:linear-gradient(180deg,rgba(0,0,0,0.1) 0%,rgba(0,0,0,0.65) 100%);"></div>
+          <div class="absolute top-4 left-4 z-20 flex flex-wrap gap-2">
+            <span class="pill">Лот #{{ lot.id }}</span>
+            <span class="pill {% if lot.status == 'active' %}pill-violet{% elif lot.status == 'ended' %}pill-muted{% else %}pill-amber-soft{% endif %}">{% if lot.status == 'active' %}Активен{% elif lot.status == 'ended' %}Завершён{% else %}Скоро{% endif %}</span>
+            <span class="pill pill-muted">{% if lot.lot_type == 'tickets' %}Билеты{% elif lot.lot_type == 'vip' %}VIP{% else %}Стол{% endif %}</span>
+          </div>
+          <div class="absolute bottom-4 left-4 right-4 z-20">
+            <p class="heading text-2xl font-bold leading-tight text-white md:text-3xl" data-translate>{{ lot.title }}</p>
+            <p class="mt-1 text-sm text-white/70" data-translate>{{ lot.artist }}</p>
+            <div class="mt-3 flex flex-wrap items-center gap-4">
+              <div>
+                <p class="text-xs text-white/50 uppercase tracking-wide">Концерт</p>
+                <p class="text-sm font-semibold text-white">{{ lot.concert_date_display }}</p>
+              </div>
+              <div>
+                <p class="text-xs text-white/50 uppercase tracking-wide">Конец торгов</p>
+                <p class="text-sm font-semibold text-white">{{ lot.end_time_display }}</p>
+              </div>
+              <div>
+                <p class="text-xs text-white/50 uppercase tracking-wide">Биддеров</p>
+                <p class="text-sm font-semibold text-white" id="stat-bidders">{{ lot.unique_bidders }}</p>
+              </div>
+              <div>
+                <p class="text-xs text-white/50 uppercase tracking-wide">Ставок</p>
+                <p class="text-sm font-semibold text-white" id="stat-total">{{ lot.total_bids }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% if lot.description %}
+        <div class="px-5 py-4">
+          <p class="text-sm leading-relaxed text-muted" data-translate>{{ lot.description }}</p>
+        </div>
+        {% endif %}
+      </article>
+
+
+      <div class="cyber-card overflow-hidden">
+        <div class="flex border-b border-white/[0.06]" id="lot-tabs">
+          <button type="button" class="lot-tab lot-tab-active flex-1 py-3 text-xs font-bold uppercase tracking-wide" data-tab="bids">⚡ Ставки <span class="ml-1 pill pill-violet-soft" id="stat-verified">{{ lot.bid_count }}</span></button>
+          <button type="button" class="lot-tab flex-1 py-3 text-xs font-bold uppercase tracking-wide" data-tab="podium">🏆 Топ</button>
+          <button type="button" class="lot-tab flex-1 py-3 text-xs font-bold uppercase tracking-wide" data-tab="feed">📡 Лента</button>
+          {% if hourly %}<button type="button" class="lot-tab flex-1 py-3 text-xs font-bold uppercase tracking-wide" data-tab="chart">📊 График</button>{% endif %}
+        </div>
+
+        <div id="tab-bids" class="lot-tab-panel p-4">
+          <div class="space-y-2 overflow-y-auto" id="bids-history" style="max-height:420px;">
+            {% for bid in bids %}
+            <div class="flex items-center justify-between gap-3 rounded px-3 py-2.5" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0" style="background:linear-gradient(135deg,#7c5cfc,#f0a500);color:white;">{{ bid.username[:2]|upper }}</div>
+                <div class="min-w-0">
+                  <p class="text-sm font-semibold truncate">{{ bid.username }}</p>
+                  <p class="font-mono text-xs text-muted">{{ bid.created_at_display }}</p>
+                </div>
+              </div>
+              <div class="text-right flex-shrink-0">
+                <p class="text-base font-bold">${{ bid.amount_usd }}</p>
+                <span class="pill pill-success" style="font-size:0.6rem;padding:0.1rem 0.35rem;">✓</span>
+              </div>
+            </div>
+            {% else %}
+            <div class="py-10 text-center">
+              <iconify-icon icon="lucide:gavel" class="text-3xl text-muted"></iconify-icon>
+              <p class="mt-3 text-sm text-muted">Ставок пока нет. Стартовая: ${{ lot.start_price_usd_display }}</p>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div id="tab-podium" class="lot-tab-panel p-4 hidden">
+          {% if top_bidders %}
+          {% if top_bidders|length >= 3 %}
+          <div class="flex items-end justify-center gap-3 mb-4" style="min-height:160px;">
+            <div class="flex flex-col items-center flex-1">
+              <div class="relative mb-2">
+                <div class="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold" style="background:linear-gradient(135deg,#9ca3af,#cbd5e1);color:#1a1a2e;box-shadow:0 0 14px rgba(203,213,225,0.3);">{{ top_bidders[1].username[:2]|upper }}</div>
+                <span class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold" style="background:#9ca3af;color:#1a1a2e;">2</span>
+              </div>
+              <p class="text-xs font-bold truncate max-w-full text-center">{{ top_bidders[1].username }}</p>
+              <p class="text-xs text-muted">${{ top_bidders[1].amount_usd }}</p>
+              <div class="w-full mt-2 rounded-t-lg" style="height:70px;background:linear-gradient(180deg,rgba(156,163,175,0.2),rgba(156,163,175,0.05));border:1px solid rgba(156,163,175,0.3);border-bottom:none;"></div>
+            </div>
+            <div class="flex flex-col items-center flex-1">
+              <div class="text-xl mb-1" style="animation:crown-bob 2.4s ease-in-out infinite;">👑</div>
+              <div class="relative mb-2">
+                <div class="w-14 h-14 rounded-full flex items-center justify-center text-base font-bold" style="background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1a1300;box-shadow:0 0 24px rgba(251,191,36,0.5);">{{ top_bidders[0].username[:2]|upper }}</div>
+                <span class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold" style="background:#fbbf24;color:#1a1300;">1</span>
+              </div>
+              <p class="text-sm font-bold truncate max-w-full text-center text-amber">{{ top_bidders[0].username }}</p>
+              <p class="text-xs font-bold text-amber">${{ top_bidders[0].amount_usd }}</p>
+              <div class="w-full mt-2 rounded-t-lg" style="height:100px;background:linear-gradient(180deg,rgba(251,191,36,0.25),rgba(251,191,36,0.05));border:1px solid rgba(251,191,36,0.45);border-bottom:none;"></div>
+            </div>
+            <div class="flex flex-col items-center flex-1">
+              <div class="relative mb-2">
+                <div class="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold" style="background:linear-gradient(135deg,#cd7f32,#a0522d);color:white;box-shadow:0 0 14px rgba(205,127,50,0.3);">{{ top_bidders[2].username[:2]|upper }}</div>
+                <span class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold" style="background:#cd7f32;color:#fff;">3</span>
+              </div>
+              <p class="text-xs font-bold truncate max-w-full text-center">{{ top_bidders[2].username }}</p>
+              <p class="text-xs text-muted">${{ top_bidders[2].amount_usd }}</p>
+              <div class="w-full mt-2 rounded-t-lg" style="height:48px;background:linear-gradient(180deg,rgba(205,127,50,0.2),rgba(205,127,50,0.05));border:1px solid rgba(205,127,50,0.3);border-bottom:none;"></div>
+            </div>
+          </div>
+          {% endif %}
+          {% if top_bidders|length > 3 %}
+          <div class="space-y-1.5 pt-3 border-t border-white/5">
+            {% for b in top_bidders[3:] %}
+            <div class="flex items-center justify-between gap-3 px-2 py-2 rounded" style="background:rgba(255,255,255,0.02);border:1px solid var(--border);">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <span class="text-xs font-bold text-muted w-5 text-center">{{ b.rank }}</span>
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style="background:linear-gradient(135deg,#7c5cfc,#f0a500);color:white;">{{ b.username[:2]|upper }}</div>
+                <p class="text-sm font-semibold truncate">{{ b.username }}</p>
+              </div>
+              <p class="text-sm font-bold flex-shrink-0">${{ b.amount_usd }}</p>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+          {% if top_bidders|length == 1 %}
+          <div class="flex items-center gap-4 p-4 rounded" style="background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.3);">
+            <div class="w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold" style="background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1a1300;">{{ top_bidders[0].username[:2]|upper }}</div>
+            <div>
+              <p class="text-sm font-bold text-amber">👑 {{ top_bidders[0].username }}</p>
+              <p class="text-xs text-muted">{{ top_bidders[0].bid_count }} ставок · лидер</p>
+              <p class="text-base font-bold mt-1">${{ top_bidders[0].amount_usd }}</p>
+            </div>
+          </div>
+          {% endif %}
+          {% if top_bidders|length == 2 %}
+          <div class="space-y-2">
+            {% for b in top_bidders %}
+            <div class="flex items-center gap-3 p-3 rounded" style="background:{% if loop.index==1 %}rgba(251,191,36,0.06){% else %}rgba(255,255,255,0.02){% endif %};border:1px solid {% if loop.index==1 %}rgba(251,191,36,0.3){% else %}var(--border){% endif %};">
+              <div class="w-12 h-12 rounded-full flex items-center justify-center text-base font-bold" style="background:{% if loop.index==1 %}linear-gradient(135deg,#fbbf24,#f59e0b);color:#1a1300{% else %}linear-gradient(135deg,#9ca3af,#cbd5e1);color:#1a1a2e{% endif %};">{{ b.username[:2]|upper }}</div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-bold truncate {% if loop.index==1 %}text-amber{% endif %}">{% if loop.index==1 %}👑 {% endif %}{{ b.username }}</p>
+                <p class="text-xs text-muted">{{ b.bid_count }} ставок</p>
+              </div>
+              <p class="text-sm font-bold">${{ b.amount_usd }}</p>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+          {% else %}
+          <div class="py-10 text-center">
+            <iconify-icon icon="lucide:trophy" class="text-3xl text-muted"></iconify-icon>
+            <p class="mt-3 text-sm text-muted">Пока нет участников</p>
+          </div>
+          {% endif %}
+        </div>
+
+        <div id="tab-feed" class="lot-tab-panel p-4 hidden">
+          <div id="live-feed" class="space-y-2 max-h-96 overflow-y-auto">
+            <p class="text-sm text-muted text-center py-4">Ожидание событий...</p>
+          </div>
+        </div>
+
+        {% if hourly %}
+        <div id="tab-chart" class="lot-tab-panel p-4 hidden">
+          <p class="text-xs font-bold uppercase tracking-wide text-violet mb-4">Активность по часам</p>
+          <div class="flex items-end gap-1 h-24">
+            {% for h in hourly|reverse %}
+            <div class="flex-1 flex flex-col items-center gap-1 group relative">
+              <div class="w-full rounded-sm transition-all" style="height:{{ h.pct }}%;min-height:4px;background:{% if h.pct > 70 %}var(--secondary){% elif h.pct > 40 %}var(--primary){% else %}rgba(124,92,252,0.35){% endif %};"></div>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="mt-2 flex justify-between text-xs text-muted">
+            <span>{{ hourly[-1].hour if hourly else '' }}</span>
+            <span>{{ hourly[0].hour if hourly else '' }}</span>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      {% if similar_lots %}
+      <div class="cyber-card p-4">
+        <p class="text-xs font-bold uppercase tracking-wide text-violet mb-3">🎫 Похожие аукционы</p>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          {% for sl in similar_lots %}
+          <a href="/lot/{{ sl.id }}" class="flex items-center gap-3 rounded p-3 transition hover:bg-white/[0.04]" style="border:1px solid var(--border);">
+            <div class="w-10 h-10 rounded flex-shrink-0 flex items-center justify-center text-xs font-bold" style="background:linear-gradient(135deg,#7c5cfc,#f0a500);color:white;">{% if sl.lot_type == 'vip' %}VIP{% elif sl.lot_type == 'table' %}🍽{% else %}🎫{% endif %}</div>
+            <div class="min-w-0 flex-1">
+              <p class="text-xs font-semibold truncate" data-translate>{{ sl.title }}</p>
+              <p class="text-xs text-muted">${{ sl.current_price_usd }} · {{ sl.end_time_display }}</p>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <aside class="lg:col-span-4 space-y-4">
+      <div class="cyber-card p-5 critical-pulse">
+        <div class="flex items-end justify-between gap-3 mb-5">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-wide text-muted" data-i18n="lot.currentBid">Текущая ставка</p>
+            <p class="price text-3xl font-bold tracking-tight mt-1" data-current-price="{{ lot.current_price_usd_display }}" data-price-usd="{{ lot.current_price_usd_display }}">${{ lot.current_price_usd_display }}</p>
+            <p class="text-sm text-muted">≈ AMD {{ lot.current_price_amd }}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-xs font-bold uppercase tracking-wide text-muted" data-i18n="lot.timer">До конца</p>
+            <p class="timer glitch-amber tabular-nums text-2xl font-bold mt-1" data-text="00:00:00" id="main-timer">--:--:--</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3 text-sm mb-5">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-wide text-muted" data-i18n="lot.startPrice">Стартовая</p>
+            <p class="mt-1 font-semibold text-muted">USD {{ lot.start_price_usd_display }}</p>
+          </div>
+          <div>
+            <p class="text-xs font-bold uppercase tracking-wide text-muted" data-i18n="lot.step">Шаг</p>
+            <p class="mt-1 font-semibold text-muted">USD {{ lot.step_usd_display }}</p>
+          </div>
+          <div>
+            <p class="text-xs font-bold uppercase tracking-wide text-muted" data-i18n="lot.minimum">Минимум</p>
+            <p class="mt-1 font-bold text-violet">USD {{ lot.next_min_usd_display }}</p>
+          </div>
+          <div>
+            <p class="text-xs font-bold uppercase tracking-wide text-muted" data-i18n="lot.growth">Прирост</p>
+            <p class="mt-1 font-bold {% if lot.growth_pct|float > 0 %}text-amber{% else %}text-muted{% endif %}">+{{ lot.growth_pct }}%</p>
+          </div>
+        </div>
+        {% if lot.status == 'active' and not is_owner %}
+        <button type="button" class="open-bid-modal btn btn-violet btn-block">
+          Сделать ставку от ${{ lot.next_min_usd_display }}
+          <iconify-icon icon="lucide:gavel" class="text-base"></iconify-icon>
+        </button>
+        {% elif is_owner %}
+        <div class="rounded-md border border-violet/40 bg-violet/10 px-4 py-3 text-sm text-center">
+          <p class="font-semibold text-violet">Это ваш лот</p>
+          <p class="text-xs text-muted mt-1">Продавец не может ставить ставки на собственные лоты</p>
+        </div>
+        {% else %}
+        <button type="button" disabled class="btn btn-ghost btn-block">Аукцион {% if lot.status == 'ended' %}завершён{% else %}неактивен{% endif %}</button>
+        {% endif %}
+      </div>
+      <script>
+      (function(){
+        var endMs = {{ lot.end_time_ms }};
+        var el = document.getElementById('main-timer');
+        window.bidstageMainTimerUpdate = function(newEndMs){
+          if (newEndMs && Number(newEndMs) > 0) endMs = Number(newEndMs);
+        };
+        function pad(n){return n<10?'0'+n:String(n);}
+        function tick(){
+          var rem = Math.max(0, endMs - Date.now());
+          var sec = Math.floor(rem/1000);
+          var h = Math.floor(sec/3600);
+          var m = Math.floor((sec%3600)/60);
+          var s = sec%60;
+          var txt = pad(h)+':'+pad(m)+':'+pad(s);
+          if(el){el.textContent=txt;el.dataset.text=txt;}
+          if(rem>0)requestAnimationFrame(tick);
+          else if(el){el.textContent='ЗАВЕРШЁН';el.dataset.text='ЗАВЕРШЁН';}
+        }
+        tick();
+      })();
+      </script>
+
+      {% if top_bidders %}
+      <div class="cyber-card p-5">
+        <div class="flex items-center justify-between mb-5">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-wide text-violet" data-i18n="lot.podium">🏆 Подиум биддеров</p>
+            <p class="text-xs text-muted mt-0.5">Топ участников по максимальной ставке</p>
+          </div>
+          <span class="pill pill-amber-soft">топ-{{ top_bidders|length }}</span>
+        </div>
+
+        {% if top_bidders|length >= 3 %}
+        <div class="flex items-end justify-center gap-3 mb-4" style="min-height:180px;">
+          <div class="flex flex-col items-center flex-1">
+            <div class="relative mb-2">
+              <div class="w-12 h-12 rounded-full flex items-center justify-center text-base font-bold text-white shadow-lg" style="background:linear-gradient(135deg,#9ca3af,#cbd5e1);color:#1a1a2e;box-shadow:0 0 16px rgba(203,213,225,0.3);">{{ top_bidders[1].username[:2]|upper }}</div>
+              <span class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold" style="background:#9ca3af;color:#1a1a2e;">2</span>
+            </div>
+            <p class="text-xs font-bold truncate max-w-full text-center">{{ top_bidders[1].username }}</p>
+            <p class="text-xs text-muted mt-0.5 price" data-price-usd="{{ top_bidders[1].amount_usd }}">${{ top_bidders[1].amount_usd }}</p>
+            <p class="text-xs text-muted">{{ top_bidders[1].bid_count }} ставок</p>
+            <div class="w-full mt-3 rounded-t-lg flex items-end justify-center pb-2" style="height:80px;background:linear-gradient(180deg,rgba(156,163,175,0.25),rgba(156,163,175,0.08));border:1px solid rgba(156,163,175,0.35);border-bottom:none;">
+              <span class="text-2xl font-black opacity-30" style="color:#9ca3af;">2</span>
+            </div>
+          </div>
+          <div class="flex flex-col items-center flex-1">
+            <div class="text-2xl mb-1" style="animation:crown-bob 2.4s ease-in-out infinite;">👑</div>
+            <div class="relative mb-2">
+              <div class="w-16 h-16 rounded-full flex items-center justify-center text-lg font-bold text-white shadow-xl" style="background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1a1300;box-shadow:0 0 28px rgba(251,191,36,0.55);">{{ top_bidders[0].username[:2]|upper }}</div>
+              <span class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold" style="background:#fbbf24;color:#1a1300;">1</span>
+            </div>
+            <p class="text-sm font-bold truncate max-w-full text-center text-amber">{{ top_bidders[0].username }}</p>
+            <p class="text-sm font-bold text-amber mt-0.5 price" data-price-usd="{{ top_bidders[0].amount_usd }}">${{ top_bidders[0].amount_usd }}</p>
+            <p class="text-xs text-muted">{{ top_bidders[0].bid_count }} ставок</p>
+            <div class="w-full mt-3 rounded-t-lg flex items-end justify-center pb-2" style="height:110px;background:linear-gradient(180deg,rgba(251,191,36,0.3),rgba(251,191,36,0.06));border:1px solid rgba(251,191,36,0.5);border-bottom:none;box-shadow:0 0 24px rgba(251,191,36,0.12);">
+              <span class="text-3xl font-black opacity-30" style="color:#fbbf24;">1</span>
+            </div>
+          </div>
+          <div class="flex flex-col items-center flex-1">
+            <div class="relative mb-2">
+              <div class="w-12 h-12 rounded-full flex items-center justify-center text-base font-bold text-white shadow-lg" style="background:linear-gradient(135deg,#cd7f32,#a0522d);box-shadow:0 0 16px rgba(205,127,50,0.3);">{{ top_bidders[2].username[:2]|upper }}</div>
+              <span class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold" style="background:#cd7f32;color:#fff;">3</span>
+            </div>
+            <p class="text-xs font-bold truncate max-w-full text-center">{{ top_bidders[2].username }}</p>
+            <p class="text-xs text-muted mt-0.5 price" data-price-usd="{{ top_bidders[2].amount_usd }}">${{ top_bidders[2].amount_usd }}</p>
+            <p class="text-xs text-muted">{{ top_bidders[2].bid_count }} ставок</p>
+            <div class="w-full mt-3 rounded-t-lg flex items-end justify-center pb-2" style="height:55px;background:linear-gradient(180deg,rgba(205,127,50,0.25),rgba(205,127,50,0.06));border:1px solid rgba(205,127,50,0.35);border-bottom:none;">
+              <span class="text-xl font-black opacity-30" style="color:#cd7f32;">3</span>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if top_bidders|length > 3 %}
+        <div class="space-y-2 pt-4 border-t border-white/5">
+          {% for b in top_bidders[3:] %}
+          <div class="flex items-center justify-between gap-3 px-2 py-2 rounded" style="background:rgba(255,255,255,0.02);border:1px solid var(--border);">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0" style="background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text-muted);">{{ b.rank }}</div>
+              <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0" style="background:linear-gradient(135deg,var(--primary),var(--secondary));color:white;">{{ b.username[:2]|upper }}</div>
+              <div class="min-w-0">
+                <p class="text-sm font-semibold truncate">{{ b.username }}</p>
+                <p class="text-xs text-muted">{{ b.bid_count }} ставок</p>
+              </div>
+            </div>
+            <p class="text-sm font-bold flex-shrink-0 price" data-price-usd="{{ b.amount_usd }}">${{ b.amount_usd }}</p>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if top_bidders|length == 1 %}
+        <div class="flex items-center gap-4 p-3 rounded" style="background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.3);">
+          <div class="w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold flex-shrink-0" style="background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1a1300;box-shadow:0 0 20px rgba(251,191,36,0.4);">{{ top_bidders[0].username[:2]|upper }}</div>
+          <div>
+            <p class="text-sm font-bold text-amber">👑 {{ top_bidders[0].username }}</p>
+            <p class="text-xs text-muted">{{ top_bidders[0].bid_count }} ставок · лидер</p>
+            <p class="text-base font-bold mt-1 price" data-price-usd="{{ top_bidders[0].amount_usd }}">${{ top_bidders[0].amount_usd }}</p>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if top_bidders|length == 2 %}
+        <div class="space-y-2">
+          {% for b in top_bidders %}
+          <div class="flex items-center gap-3 p-3 rounded" style="background:{% if loop.index == 1 %}rgba(251,191,36,0.06){% else %}rgba(255,255,255,0.02){% endif %};border:1px solid {% if loop.index == 1 %}rgba(251,191,36,0.3){% else %}var(--border){% endif %};">
+            <div class="w-12 h-12 rounded-full flex items-center justify-center text-base font-bold flex-shrink-0" style="background:{% if loop.index == 1 %}linear-gradient(135deg,#fbbf24,#f59e0b);color:#1a1300;box-shadow:0 0 16px rgba(251,191,36,0.4){% else %}linear-gradient(135deg,#9ca3af,#cbd5e1);color:#1a1a2e{% endif %};">{{ b.username[:2]|upper }}</div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-bold truncate {% if loop.index == 1 %}text-amber{% endif %}">{% if loop.index == 1 %}👑 {% endif %}{{ b.username }}</p>
+              <p class="text-xs text-muted">{{ b.bid_count }} ставок</p>
+            </div>
+            <p class="text-sm font-bold price" data-price-usd="{{ b.amount_usd }}">${{ b.amount_usd }}</p>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {% if lot.seller_id %}
+      <div class="cyber-card p-5">
+        <p class="text-xs font-bold uppercase tracking-wide text-violet mb-3">👤 Продавец</p>
+        <div class="flex items-center gap-3 mb-4">
+          <a href="/seller/{{ lot.seller_id }}" class="w-12 h-12 rounded-full flex items-center justify-center text-base font-bold flex-shrink-0 hover:opacity-80 transition-opacity" style="background:linear-gradient(135deg,var(--primary),var(--secondary));color:white;">{{ (lot.seller_username or 'П')[:2]|upper }}</a>
+          <div class="min-w-0 flex-1">
+            <a href="/seller/{{ lot.seller_id }}" class="text-sm font-bold hover:text-violet transition-colors">{{ lot.seller_username or 'Продавец' }}</a>
+            {% if lot.seller_stats %}
+            <div class="flex items-center gap-1 mt-0.5">
+              {% for i in range(5) %}
+              <iconify-icon icon="lucide:star" class="text-xs {% if i < lot.seller_stats.avg_rating|int %}text-amber{% else %}text-muted{% endif %}"></iconify-icon>
+              {% endfor %}
+              <span class="text-xs text-muted ml-1">{{ lot.seller_stats.avg_rating }} ({{ lot.seller_stats.review_count }})</span>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% if lot.seller_stats %}
+        <div class="grid grid-cols-2 gap-2 text-center">
+          <div class="rounded p-2" style="background:rgba(255,255,255,0.03);border:1px solid var(--border);">
+            <p class="text-lg font-bold text-violet">{{ lot.seller_stats.sold_lots }}</p>
+            <p class="text-xs text-muted">продано</p>
+          </div>
+          <div class="rounded p-2" title="Процент проданных лотов от общего числа выставленных" style="background:rgba(255,255,255,0.03);border:1px solid var(--border);">
+            <p class="text-lg font-bold text-success">{{ lot.seller_stats.success_rate }}%</p>
+            <p class="text-xs text-muted">успешных продаж</p>
+          </div>
+        </div>
+        {% endif %}
+        {% if me and lot.seller_id != me.id %}
+        <button type="button" class="open-chat-btn btn btn-ghost btn-block btn-sm mt-3">
+          <iconify-icon icon="lucide:message-circle"></iconify-icon>
+          <span>Написать продавцу</span>
+        </button>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      <div class="cyber-card p-4">
+        <p class="text-xs font-bold uppercase tracking-wide text-violet mb-2" data-i18n="lot.share">Поделиться</p>
+        <div class="flex gap-2">
+          <button type="button" class="btn btn-ghost btn-sm flex-1" onclick="window.open('https://vk.com/share.php?url='+encodeURIComponent(window.location.href),'_blank')">
+            <iconify-icon icon="logos:vk"></iconify-icon>
+          </button>
+          <button type="button" class="btn btn-ghost btn-sm flex-1" onclick="window.open('https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(window.location.href),'_blank')">
+            <iconify-icon icon="logos:facebook"></iconify-icon>
+          </button>
+          <button type="button" class="btn btn-ghost btn-sm flex-1" onclick="window.open('https://t.me/share/url?url='+encodeURIComponent(window.location.href),'_blank')">
+            <iconify-icon icon="logos:telegram"></iconify-icon>
+          </button>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <div id="bid-modal" class="modal-overlay">
+    <div class="cyber-card modal-card">
+      <button type="button" id="close-modal" class="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded text-muted hover:text-white">
+        <iconify-icon icon="lucide:x" class="text-xl"></iconify-icon>
+      </button>
+      <div class="mb-5 grid grid-cols-3 gap-2">
+        <div class="step-indicator pill pill-violet">01 · сумма</div>
+        <div class="step-indicator pill pill-muted">02 · шара</div>
+        <div class="step-indicator pill pill-muted">03 · готово</div>
+      </div>
+      <div id="modal-step-1" class="modal-step">
+        <p class="text-xs font-bold uppercase tracking-wide text-violet" data-i18n="modal.terminal">Терминал ставок</p>
+        <h2 id="modal-title" class="heading mt-1 text-2xl font-bold" data-translate>{{ lot.title }}</h2>
+        <p class="mt-1 text-sm text-muted"><span data-i18n="modal.minimum">Минимум</span>: <span data-min-display>—</span></p>
+        <div class="seg mt-4 w-full">
+          <button type="button" id="bid-mode-manual" class="seg-btn seg-btn-active flex-1" data-mode="manual" data-i18n="modal.manual">Ручная</button>
+          <button type="button" id="bid-mode-proxy" class="seg-btn flex-1" data-mode="proxy" data-i18n="modal.autobid">⚡ Автоставка</button>
+        </div>
+        <label class="field-label mt-4" for="bid-amount"><span id="bid-amount-label" data-i18n="modal.bidAmount">Сумма ставки</span></label>
+        <div class="relative">
+          <input id="bid-amount" type="number" min="0" step="1" maxlength="14" inputmode="decimal" class="field text-2xl font-bold pr-14" placeholder="0" style="text-overflow:ellipsis;">
+          <span id="bid-amount-unit" class="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-muted pointer-events-none">USD</span>
+        </div>
+        <p id="proxy-hint" class="hidden mt-2 text-xs text-amber leading-relaxed" data-i18n="modal.autobidHint">⚡ <strong>Автоставка:</strong> система автоматически перебивает соперников на минимальный шаг до этой суммы. Не нужно следить за лотом.</p>
+        <p id="minimum-bid" class="mt-2 text-sm text-muted">—</p>
+
+        <div class="mt-3 flex gap-2">
+          <button type="button" class="quick-bid btn btn-ghost btn-sm flex-1" data-steps="1"><span data-i18n="modal.plus1step">+1 шаг</span></button>
+          <button type="button" class="quick-bid btn btn-ghost btn-sm flex-1" data-steps="3"><span data-i18n="modal.plus3steps">+3 шага</span></button>
+          <button type="button" class="quick-bid btn btn-ghost btn-sm flex-1" data-steps="5"><span data-i18n="modal.plus5steps">+5 шагов</span></button>
+          <button type="button" class="quick-bid btn btn-ghost btn-sm flex-1" data-steps="10">+10</button>
+        </div>
+
+        <div class="mt-4 grid grid-cols-3 gap-2">
+          <div class="rounded border border-white/[0.08] bg-white/[0.03] p-3 text-center min-w-0 overflow-hidden">
+            <p class="text-xs font-bold text-muted">AMD</p>
+            <p id="amd-preview" class="mt-1 font-bold truncate" title="—">—</p>
+          </div>
+          <div class="rounded border border-white/[0.08] bg-white/[0.03] p-3 text-center min-w-0 overflow-hidden">
+            <p class="text-xs font-bold text-muted">RUB</p>
+            <p id="rub-preview" class="mt-1 font-bold truncate" title="—">—</p>
+          </div>
+          <div class="rounded border border-white/[0.08] bg-white/[0.03] p-3 text-center min-w-0 overflow-hidden">
+            <p class="text-xs font-bold text-muted">USD</p>
+            <p id="usd-preview" class="mt-1 font-bold truncate" title="—">—</p>
+          </div>
+        </div>
+        <button type="button" id="continue-share" class="btn btn-violet btn-block mt-5" data-i18n="modal.continue">Продолжить</button>
+      </div>
+      <div id="modal-step-2" class="modal-step step-inactive">
+        <p class="text-xs font-bold uppercase tracking-wide text-violet">Шаг 2 из 3</p>
+        <h2 class="heading mt-1 text-2xl font-bold">Поделитесь лотом</h2>
+
+        {% if dev_auto_verify %}
+        <div class="mt-4 rounded p-4 text-sm leading-relaxed" style="border:1px solid rgba(124,92,252,0.25);background:rgba(124,92,252,0.05);">
+          <p class="font-bold text-violet mb-2">Поделитесь лотом в соцсети</p>
+          <p class="text-sm">Опубликуйте пост в любой соцсети (VK, Facebook, Twitter/X, Telegram-канал, OK, Reddit и т.п.) и вставьте ссылку на пост ниже.</p>
+        </div>
+        {% else %}
+        <div class="mt-4 rounded p-4 text-sm leading-relaxed" style="border:1px solid rgba(124,92,252,0.25);background:rgba(124,92,252,0.05);">
+          <p class="font-bold text-violet mb-2">Как получить ссылку на пост:</p>
+          <ol class="space-y-1.5 text-sm pl-5 list-decimal">
+            <li>Нажмите <strong>«Поделиться в VK»</strong> — откроется новая вкладка</li>
+            <li>В окне VK подтвердите публикацию (<strong>«Опубликовать»</strong>)</li>
+            <li>Перейдите в <strong>свой профиль VK</strong> → найдите только что опубликованный пост</li>
+            <li>Нажмите на <strong>дату/время поста</strong> — откроется страница поста с URL вида <code class="kbd">vk.com/wall12345_67</code></li>
+            <li>Скопируйте этот URL и вставьте сюда ↓</li>
+          </ol>
+        </div>
+        {% endif %}
+
+        <div class="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <button type="button" id="share-vk-btn" class="btn btn-violet btn-sm"><iconify-icon icon="logos:vk"></iconify-icon> VK</button>
+          <button type="button" id="share-fb-btn" class="btn btn-ghost btn-sm"><iconify-icon icon="logos:facebook"></iconify-icon> Facebook</button>
+          <button type="button" id="share-tw-btn" class="btn btn-ghost btn-sm"><iconify-icon icon="logos:twitter"></iconify-icon> X (Twitter)</button>
+          <button type="button" id="share-tg-btn" class="btn btn-ghost btn-sm"><iconify-icon icon="logos:telegram"></iconify-icon> Telegram</button>
+          <button type="button" id="share-wa-btn" class="btn btn-ghost btn-sm"><iconify-icon icon="logos:whatsapp-icon"></iconify-icon> WhatsApp</button>
+          <button type="button" id="share-copy-btn" class="btn btn-ghost btn-sm"><iconify-icon icon="lucide:copy"></iconify-icon> Скопировать</button>
+        </div>
+        <label class="field-label mt-4" for="post-url">Ссылка на ваш пост</label>
+        <input id="post-url" type="url" placeholder="https://vk.com/wall12345_67 или ссылка на любую соцсеть" class="field">
+        <p id="share-error" class="hidden mt-2 text-sm font-semibold" style="color:var(--danger);"></p>
+        <p class="mt-2 text-xs text-muted">Поддерживаются: VK, Facebook, Twitter/X, Telegram, OK, Reddit, LinkedIn, Pinterest. Сервер проверит, что в посте есть ссылка на этот лот.</p>
+        <button type="button" id="confirm-bid" class="btn btn-violet btn-block mt-5">Подтвердить ставку</button>
+
+        <div id="otp-block" class="hidden mt-5 rounded p-4" style="border:1px solid rgba(124,92,252,0.35);background:rgba(124,92,252,0.06);">
+          <p class="font-bold text-violet mb-2">🔐 Подтверждение</p>
+          <p class="text-sm text-muted mb-3">Мы отправили 6-значный код для подтверждения ставки. <span id="otp-demo-hint" class="text-amber"></span></p>
+          <input id="otp-input" type="text" inputmode="numeric" maxlength="6" placeholder="000000" class="field font-mono text-2xl tracking-[0.4em] text-center">
+          <p id="otp-error" class="hidden mt-2 text-sm font-semibold" style="color:var(--danger);"></p>
+          <button type="button" id="otp-confirm" class="btn btn-violet btn-block mt-3">Подтвердить код</button>
+          <button type="button" id="otp-cancel" class="btn btn-ghost btn-block btn-sm mt-2">Отмена</button>
+        </div>
+      </div>
+      <div id="modal-step-3" class="modal-step step-inactive text-center">
+        <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-full" style="background:rgba(124,92,252,0.15);color:var(--violet);">
+          <iconify-icon icon="lucide:loader-2" class="text-4xl animate-spin"></iconify-icon>
+        </div>
+        <h2 class="heading mt-5 text-2xl font-bold text-violet">Ставка отправлена</h2>
+        <p class="mt-2 text-sm text-muted">Сейчас сервер проверит, что в посте по вашей ссылке есть упоминание лота. Это занимает до 1 минуты.</p>
+        <p class="mt-3 text-xs text-muted">Если ссылка валидна — ставка появится в истории и вы получите уведомление. Если нет — придёт сообщение с указанием причины, и можно будет попробовать снова.</p>
+        <button type="button" id="success-close" class="btn btn-violet btn-block mt-5">Вернуться к лоту</button>
+      </div>
+    </div>
+  </div>
+
+  {% if me and lot.seller_id and lot.seller_id != me.id %}
+  <div id="chat-modal" class="modal-overlay">
+    <div class="cyber-card modal-card" style="max-width:480px;display:flex;flex-direction:column;height:min(640px,90vh);">
+      <button type="button" id="chat-close" class="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded text-muted hover:text-white">
+        <iconify-icon icon="lucide:x" class="text-xl"></iconify-icon>
+      </button>
+      <div class="mb-3">
+        <p class="text-xs font-bold uppercase tracking-wide text-violet" data-i18n="chat.title">💬 Чат с продавцом</p>
+        <h2 class="heading mt-1 text-xl font-bold">{{ lot.seller_username or 'Продавец' }}</h2>
+        <p class="text-xs text-muted mt-1" data-translate>{{ lot.title }}</p>
+      </div>
+      <div id="chat-messages" class="flex-1 overflow-y-auto space-y-2 pr-1" style="border:1px solid var(--border);background:rgba(255,255,255,0.02);border-radius:6px;padding:10px;">
+        <p class="text-xs text-muted text-center" data-i18n="chat.loading">Загрузка...</p>
+      </div>
+      <form id="chat-form" class="mt-3 flex gap-2">
+        <input id="chat-input" type="text" class="field flex-1" maxlength="2000" placeholder="Сообщение..." required>
+        <button type="submit" class="btn btn-violet btn-sm">
+          <iconify-icon icon="lucide:send"></iconify-icon>
+        </button>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+</main>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  const LOT_ID = {{ lot.id }};
+  const LOT_STEP_AMD = {{ lot.step_amd }};
+  const LOT_MIN_AMD = {{ lot.next_min_amd }};
+  const LOT_END_TIME_MS = {{ lot.end_time_ms }};
+  const LOT_DURATION_MS = {{ lot.original_duration_ms }};
+  console.log('LOT_END_TIME_MS:', LOT_END_TIME_MS, 'Date.now():', Date.now(), 'diff_min:', (LOT_END_TIME_MS - Date.now()) / 60000);
+  const feed = document.getElementById('live-feed');
+  let feedItems = [];
+
+  function addFeedItem(icon, text, kind) {
+    const colors = { bid: 'var(--primary)', outbid: 'var(--secondary)', cancel: 'var(--danger)', extend: 'var(--success)', end: 'var(--text-muted)', join: 'rgba(255,255,255,0.3)' };
+    const color = colors[kind] || 'var(--text-muted)';
+    const now = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const item = document.createElement('div');
+    item.className = 'flex items-start gap-2.5 rounded p-2.5 text-sm';
+    item.style.cssText = 'background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);animation:fadeIn 0.3s ease;';
+    item.innerHTML = `<span style="color:${color};flex-shrink:0;margin-top:2px;">${icon}</span><span class="flex-1 leading-snug">${text}</span><span class="font-mono text-xs text-muted flex-shrink-0">${now}</span>`;
+    if (feed.firstChild && feed.firstChild.textContent && feed.firstChild.textContent.includes('Ожидание')) {
+      feed.innerHTML = '';
+    }
+    feed.insertBefore(item, feed.firstChild);
+    feedItems.push(item);
+    if (feedItems.length > 50) {
+      const old = feedItems.shift();
+      if (old.parentNode) old.parentNode.removeChild(old);
+    }
+  }
+  window.addFeedItem = addFeedItem;
+
+  fetch('/api/lot/' + LOT_ID + '/live').then(r => r.json()).then(data => {
+    if (data.events && data.events.length > 0) {
+      feed.innerHTML = '';
+      const reversed = data.events.slice().reverse();
+      reversed.forEach(ev => {
+        const time = ev.created_at_display || '';
+        let icon = '⚡', kind = 'bid', text = '';
+        if (ev.event_type === 'new_bid') {
+          icon = '⚡'; kind = 'bid';
+          text = `<strong>${ev.actor_username}</strong> поставил <strong>$${Number(ev.amount_usd || 0).toFixed(0)}</strong>`;
+        } else if (ev.event_type === 'timer_extended') {
+          icon = '⏱'; kind = 'extend';
+          const ext = (ev.payload && ev.payload.extension_seconds) || 180;
+          text = `Таймер продлён на <strong>+${ext} сек</strong> — анти-снайпинг`;
+        } else if (ev.event_type === 'bid_cancelled') {
+          icon = '❌'; kind = 'cancel';
+          text = `Ставка <strong>${ev.actor_username || ''}</strong> аннулирована`;
+        } else if (ev.event_type === 'auction_ended') {
+          icon = '🏁'; kind = 'end';
+          text = `Аукцион завершён. Победитель: <strong>${ev.actor_username || '—'}</strong>`;
+        } else if (ev.event_type === 'share_verified') {
+          icon = '✅'; kind = 'extend';
+          text = `Шара подтверждена для <strong>${ev.actor_username || ''}</strong>`;
+        } else {
+          text = ev.event_type;
+        }
+        addFeedItem(icon, text, kind);
+      });
+    }
+  }).catch(() => {});
+
+  if (typeof io !== 'undefined' && window.socket) {
+    window.socket.on('new_bid', payload => {
+      if (payload.lot_id !== LOT_ID) return;
+      addFeedItem('⚡', `<strong>${payload.user}</strong> поставил <strong>$${Number(payload.amount_usd).toFixed(0)}</strong>`, 'bid');
+      const statTotal = document.getElementById('stat-total');
+      if (statTotal) statTotal.textContent = String(Number(statTotal.textContent) + 1);
+    });
+    window.socket.on('outbid', payload => {
+      if (payload.lot_id !== LOT_ID) return;
+      addFeedItem('🔔', `Вашу ставку перебили — новый максимум <strong>$${Number(payload.new_amount_usd).toFixed(0)}</strong>`, 'outbid');
+    });
+    window.socket.on('bid_cancelled', payload => {
+      if (payload.lot_id !== LOT_ID) return;
+      addFeedItem('❌', `Ставка аннулирована: ${payload.reason}`, 'cancel');
+    });
+    window.socket.on('timer_extended', payload => {
+      if (payload.lot_id !== LOT_ID) return;
+      addFeedItem('⏱', `Таймер продлён на <strong>+${payload.extension_seconds} сек</strong> — анти-снайпинг`, 'extend');
+    });
+    window.socket.on('auction_ended', payload => {
+      if (payload.lot_id !== LOT_ID) return;
+      addFeedItem('🏁', `Аукцион завершён! Победитель: пользователь #${payload.winner_id}`, 'end');
+    });
+    window.socket.on('new_top_bid', payload => {
+      if (payload.lot_id !== LOT_ID) return;
+      addFeedItem('📈', `Новая максимальная ставка: <strong>$${Number(payload.amount_usd).toFixed(0)}</strong>`, 'bid');
+    });
+    window.socket.on('bid_verified', payload => {
+      if (payload.lot_id !== LOT_ID) return;
+      addFeedItem('✅', `Шара подтверждена — ставка <strong>$${Number(payload.amount_usd || 0).toFixed(0)}</strong> от <strong>${payload.username || ''}</strong> вступила в силу`, 'extend');
+      const priceEl = document.querySelector('[data-current-price]');
+      if (priceEl) {
+        const cur = Number(priceEl.getAttribute('data-current-price') || 0);
+        if (Number(payload.amount_usd) > cur) {
+          priceEl.setAttribute('data-current-price', String(payload.amount_usd));
+          priceEl.textContent = '$' + Number(payload.amount_usd).toFixed(0);
+          priceEl.classList.add('flash-amber');
+          setTimeout(() => priceEl.classList.remove('flash-amber'), 1200);
+        }
+      }
+    });
+  }
+
+  const style = document.createElement('style');
+  style.textContent = '@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}';
+  document.head.appendChild(style);
+
+  const progressBar = document.getElementById('time-progress');
+  if (progressBar && LOT_END_TIME_MS > 0 && LOT_DURATION_MS > 0) {
+    function updateProgress() {
+      const remaining = Math.max(0, LOT_END_TIME_MS - Date.now());
+      const pct = (remaining / LOT_DURATION_MS) * 100;
+      progressBar.style.width = Math.min(100, Math.max(0, pct)) + '%';
+      if (pct < 10) progressBar.style.background = 'linear-gradient(90deg,var(--danger),var(--secondary))';
+      else if (pct < 30) progressBar.style.background = 'linear-gradient(90deg,var(--secondary),var(--primary))';
+      else progressBar.style.background = 'linear-gradient(90deg,var(--primary),var(--secondary))';
+    }
+    updateProgress();
+    setInterval(updateProgress, 1000);
+  } else if (progressBar) {
+    progressBar.style.width = '0%';
+  }
+
+  document.querySelectorAll('.quick-bid').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const steps = Number(btn.getAttribute('data-steps'));
+      const bidInput = document.getElementById('bid-amount');
+      if (!bidInput) return;
+      const current = Number(bidInput.value) || LOT_MIN_AMD;
+      let next = current + (steps - 1) * LOT_STEP_AMD;
+      // Ограничение: $1M в текущей валюте (через window.rates если есть)
+      try {
+        const rate = (window.rates && (window.currentCurrency === 'AMD' ? window.rates.AMD : window.currentCurrency === 'RUB' ? window.rates.RUB : 1)) || 1;
+        const cap = 1000000 * rate;
+        if (next > cap) next = Math.floor(cap);
+      } catch (e) {}
+      bidInput.value = next;
+      bidInput.dispatchEvent(new Event('input'));
+    });
+  });
+
+  let bidMode = 'manual';
+  const modeManualBtn = document.getElementById('bid-mode-manual');
+  const modeProxyBtn = document.getElementById('bid-mode-proxy');
+  const proxyHint = document.getElementById('proxy-hint');
+  const amountLabel = document.getElementById('bid-amount-label');
+  function setBidMode(mode) {
+    bidMode = mode;
+    if (mode === 'proxy') {
+      modeManualBtn.classList.remove('seg-btn-active');
+      modeProxyBtn.classList.add('seg-btn-active');
+      proxyHint.classList.remove('hidden');
+      amountLabel.textContent = 'Максимум, который вы готовы заплатить';
+    } else {
+      modeProxyBtn.classList.remove('seg-btn-active');
+      modeManualBtn.classList.add('seg-btn-active');
+      proxyHint.classList.add('hidden');
+      amountLabel.textContent = 'Сумма ставки';
+    }
+  }
+  if (modeManualBtn) modeManualBtn.addEventListener('click', () => setBidMode('manual'));
+  if (modeProxyBtn) modeProxyBtn.addEventListener('click', () => setBidMode('proxy'));
+
+  const confirmBidBtn = document.getElementById('confirm-bid');
+  if (confirmBidBtn) {
+    const originalHandler = confirmBidBtn.onclick;
+    confirmBidBtn.addEventListener('click', async (e) => {
+      if (bidMode !== 'proxy') return;
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      const postUrl = document.getElementById('post-url').value.trim();
+      const bidInput = document.getElementById('bid-amount');
+      const inputValue = Number(bidInput.value);
+      // Корректная конвертация значения инпута (AMD/RUB/USD) в USD через курс
+      let amountUsd = inputValue;
+      try {
+        const cur = (window.currentCurrency || 'USD').toUpperCase();
+        const rates = window.rates || {};
+        if (cur === 'AMD') amountUsd = inputValue / (Number(rates.AMD) || 390);
+        else if (cur === 'RUB') amountUsd = inputValue / (Number(rates.RUB) || 90);
+        else amountUsd = inputValue;
+      } catch (e) { amountUsd = inputValue; }
+      try {
+        const resp = await fetch('/api/lot/' + LOT_ID + '/proxy-bid', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ max_amount_usd: amountUsd, share_url: postUrl })
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+          if (data.error === 'max_too_low') {
+            const el = document.getElementById('share-error');
+            if (el) { el.textContent = 'Максимум должен быть не меньше $' + Number(data.minimum_usd).toFixed(2); el.classList.remove('hidden'); }
+            else if (window.bidstageToast) window.bidstageToast('Максимум должен быть не меньше $' + Number(data.minimum_usd).toFixed(2), 'bad');
+          } else {
+            if (window.bidstageToast) window.bidstageToast('Ошибка автоставки: ' + (data.error || resp.status), 'bad');
+          }
+          return;
+        }
+        const showStepFn = window.showStep || function(){};
+        showStepFn(2);
+        if (window.addFeedItem) window.addFeedItem('⚡', '<strong>Автоставка</strong> активирована: до $' + amountUsd.toFixed(0), 'extend');
+        setTimeout(() => {
+          const m = document.getElementById('bid-modal');
+          if (m) m.classList.remove('is-open');
+          window.location.reload();
+        }, 2500);
+      } catch (err) {
+        if (window.bidstageToast) window.bidstageToast('Сетевая ошибка', 'bad');
+      }
+    }, true);
+  }
+
+  const watchBtn = document.getElementById('watch-btn');
+  if (watchBtn) {
+    watchBtn.addEventListener('click', async () => {
+      watchBtn.disabled = true;
+      try {
+        const resp = await fetch('/api/lot/' + LOT_ID + '/watch', { method: 'POST' });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+          if (window.bidstageToast) window.bidstageToast('Ошибка: ' + (data.error || resp.status), 'bad');
+          return;
+        }
+        const icon = document.getElementById('watch-icon');
+        const label = document.getElementById('watch-label');
+        if (data.watching) {
+          icon.setAttribute('icon', 'lucide:bell-off');
+          label.textContent = 'Отписаться';
+          watchBtn.classList.add('text-amber');
+          addFeedItem('🔔', 'Вы подписались на уведомления по этому лоту', 'join');
+        } else {
+          icon.setAttribute('icon', 'lucide:bell');
+          label.textContent = 'Следить';
+          watchBtn.classList.remove('text-amber');
+          addFeedItem('🔕', 'Вы отписались от уведомлений', 'join');
+        }
+      } catch (e) {
+        if (window.bidstageToast) window.bidstageToast('Сетевая ошибка', 'bad');
+      } finally { watchBtn.disabled = false; }
+    });
+  }
+
+  const chatModal = document.getElementById('chat-modal');
+  const chatOpenBtns = document.querySelectorAll('.open-chat-btn');
+  const chatCloseBtn = document.getElementById('chat-close');
+  const chatForm = document.getElementById('chat-form');
+  const chatInput = document.getElementById('chat-input');
+  const chatList = document.getElementById('chat-messages');
+  const ME_ID = {% if me %}{{ me.id }}{% else %}null{% endif %};
+  const SELLER_ID = {% if lot.seller_id %}{{ lot.seller_id }}{% else %}null{% endif %};
+
+  function renderChatMessage(m) {
+    const mine = ME_ID !== null && Number(m.sender_id) === Number(ME_ID);
+    const wrapper = document.createElement('div');
+    wrapper.className = 'flex ' + (mine ? 'justify-end' : 'justify-start');
+    const bubble = document.createElement('div');
+    bubble.style.maxWidth = '78%';
+    bubble.style.padding = '0.55rem 0.8rem';
+    bubble.style.borderRadius = '10px';
+    bubble.style.fontSize = '0.88rem';
+    bubble.style.lineHeight = '1.35';
+    bubble.style.background = mine ? 'rgba(124,92,252,0.18)' : 'rgba(255,255,255,0.04)';
+    bubble.style.border = '1px solid ' + (mine ? 'rgba(124,92,252,0.3)' : 'var(--border)');
+    bubble.textContent = m.message;
+    const meta = document.createElement('p');
+    meta.style.fontSize = '0.65rem';
+    meta.style.color = 'var(--text-muted)';
+    meta.style.marginTop = '4px';
+    const t = m.created_at ? new Date(m.created_at) : new Date();
+    meta.textContent = (m.sender_username || '') + ' · ' + t.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    bubble.appendChild(meta);
+    wrapper.appendChild(bubble);
+    chatList.appendChild(wrapper);
+    chatList.scrollTop = chatList.scrollHeight;
+  }
+
+  async function loadChat() {
+    if (!chatList) return;
+    chatList.innerHTML = '<p class="text-xs text-muted text-center">Загрузка...</p>';
+    try {
+      const resp = await fetch('/api/lot/' + LOT_ID + '/chat');
+      const data = await resp.json().catch(() => ({}));
+      chatList.innerHTML = '';
+      if (!data.messages || data.messages.length === 0) {
+        const empty = document.createElement('p');
+        empty.className = 'text-xs text-muted text-center';
+        empty.textContent = 'Сообщений ещё нет. Напишите первым.';
+        chatList.appendChild(empty);
+        return;
+      }
+      data.messages.forEach(renderChatMessage);
+    } catch (e) {
+      chatList.innerHTML = '<p class="text-xs text-amber text-center">Ошибка загрузки чата</p>';
+    }
+  }
+
+  if (chatOpenBtns.length && chatModal) {
+    chatOpenBtns.forEach(btn => {
+      btn.addEventListener('click', () => { chatModal.classList.add('is-open'); loadChat(); });
+    });
+  }
+  if (chatCloseBtn && chatModal) chatCloseBtn.addEventListener('click', () => chatModal.classList.remove('is-open'));
+  if (chatModal) chatModal.addEventListener('click', (e) => { if (e.target === chatModal) chatModal.classList.remove('is-open'); });
+  if (chatForm && chatInput) {
+    chatForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const message = (chatInput.value || '').trim();
+      if (!message) return;
+      chatInput.value = '';
+      try {
+        const resp = await fetch('/api/lot/' + LOT_ID + '/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message }),
+        });
+        if (!resp.ok) {
+          const data = await resp.json().catch(() => ({}));
+          if (window.bidstageToast) window.bidstageToast(data.message || 'Не удалось отправить', 'bad');
+          chatInput.value = message;
+        }
+      } catch (err) {
+        if (window.bidstageToast) window.bidstageToast('Сетевая ошибка', 'bad');
+        chatInput.value = message;
+      }
+    });
+  }
+  if (typeof io !== 'undefined' && window.socket) {
+    window.socket.on('chat_message', (payload) => {
+      if (Number(payload.lot_id) !== Number(LOT_ID)) return;
+      if (chatList && (chatModal && chatModal.classList.contains('is-open'))) {
+        const empty = chatList.querySelector('.text-xs.text-muted.text-center');
+        if (empty) empty.remove();
+        renderChatMessage(payload);
+      } else if (window.bidstageToast && Number(payload.sender_id) !== Number(ME_ID)) {
+        window.bidstageToast('Новое сообщение от ' + (payload.sender_username || 'продавца'), 'good');
+      }
+    });
+  }
+
+  const copyLinkBtn = document.getElementById('copy-link-btn');
+  const copyLinkLabel = document.getElementById('copy-link-label');
+  if (copyLinkBtn) {
+    copyLinkBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        copyLinkLabel.textContent = '✓ Скопировано';
+        copyLinkBtn.style.color = 'var(--success)';
+        setTimeout(() => { copyLinkLabel.textContent = 'Скопировать'; copyLinkBtn.style.color = ''; }, 2000);
+      } catch (e) {
+        if (window.bidstageToast) window.bidstageToast('Не удалось скопировать', 'bad');
+      }
+    });
+  }
+
+  function animateCounter(el, target, duration) {
+    if (!el) return;
+    const start = parseInt(el.textContent || '0', 10) || 0;
+    const diff = target - start;
+    if (diff === 0) return;
+    const startTime = performance.now();
+    function step(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      el.textContent = String(Math.round(start + diff * eased));
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  animateCounter(document.getElementById('stat-total'), {{ lot.total_bids }}, 800);
+  animateCounter(document.getElementById('stat-verified'), {{ lot.bid_count }}, 900);
+  animateCounter(document.getElementById('stat-bidders'), {{ lot.unique_bidders }}, 700);
+
+  document.querySelectorAll('.lot-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.getAttribute('data-tab');
+      document.querySelectorAll('.lot-tab').forEach(t => t.classList.remove('lot-tab-active'));
+      tab.classList.add('lot-tab-active');
+      document.querySelectorAll('.lot-tab-panel').forEach(p => p.classList.add('hidden'));
+      const panel = document.getElementById('tab-' + target);
+      if (panel) panel.classList.remove('hidden');
+    });
+  });
+})();
+</script>
+{% endblock %}

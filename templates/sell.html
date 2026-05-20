@@ -1,0 +1,493 @@
+{% extends "base.html" %}
+{% block content %}
+<main class="relative mx-auto max-w-[1280px] px-6 py-10 lg:px-12">
+  <div class="grid gap-6 lg:grid-cols-12">
+    <section class="cyber-card p-6 sm:p-8 lg:col-span-7">
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="pill pill-violet-soft"><iconify-icon icon="lucide:plus-circle"></iconify-icon> <span data-i18n="sell.newLot">Новый лот</span></span>
+        <span class="pill pill-amber-soft" data-i18n="sell.paidListing">Платный листинг</span>
+      </div>
+      <h1 class="heading mt-4 text-3xl font-bold" data-i18n="sell.createTitle">Создать аукцион</h1>
+      <p class="mt-2 text-sm text-muted" data-i18n="sell.createSubtitle">Выставите свой лот на торги. Платформа берёт листинговую комиссию и процент с финальной продажи.</p>
+
+      <form id="create-lot-form" class="mt-6 space-y-4" data-persist>
+        <div>
+          <label class="field-label" for="lot-title" data-i18n="sell.lotName">Название лота</label>
+          <input id="lot-title" name="title" type="text" class="field" placeholder="Например: 2 VIP-билета на финал ЧМ" minlength="3" maxlength="200" required>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label class="field-label" for="lot-artist" data-i18n="sell.artist">Артист / Событие</label>
+            <input id="lot-artist" name="artist" type="text" class="field" placeholder="Имя артиста или название" required>
+          </div>
+          <div>
+            <label class="field-label" for="lot-type" data-i18n="sell.type">Тип лота</label>
+            <select id="lot-type" name="lot_type" class="field" required>
+              <option value="tickets" data-i18n="lot.type.tickets">Билеты</option>
+              <option value="vip" data-i18n="lot.type.vip">VIP-пропуск</option>
+              <option value="table" data-i18n="lot.type.table">Стол</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="field-label" for="lot-description" data-i18n="sell.description">Описание</label>
+          <textarea id="lot-description" name="description" class="field" rows="3" placeholder="Что входит в лот, особые условия..."></textarea>
+        </div>
+
+        <div>
+          <label class="field-label" for="lot-image" data-i18n="sell.image">Картинка лота</label>
+          <div id="image-drop-zone" class="image-drop-zone" role="button" tabindex="0" aria-label="Загрузить картинку">
+            <input id="lot-image" name="image" type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="image-drop-input">
+            <div id="image-drop-content" class="image-drop-content">
+              <iconify-icon icon="lucide:image-plus" class="text-3xl text-muted"></iconify-icon>
+              <p class="mt-2 text-sm font-semibold text-muted" data-i18n="sell.imageDrop">Перетащите картинку или нажмите</p>
+              <p class="text-xs text-muted mt-1" data-i18n="sell.imageHint">JPG, PNG, WebP или GIF до 6 МБ. Опционально.</p>
+            </div>
+            <img id="image-preview" class="image-drop-preview hidden" alt="Превью">
+          </div>
+          <p id="image-error" class="hidden mt-1 text-xs font-semibold" style="color:var(--danger);"></p>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-3">
+          <div>
+            <label class="field-label" for="lot-start-price" data-i18n="sell.startPrice">Стартовая цена</label>
+            <input id="lot-start-price" name="start_price" type="number" min="0.01" step="0.01" class="field" placeholder="100" required>
+          </div>
+          <div>
+            <label class="field-label" for="lot-step" data-i18n="sell.bidStep">Шаг ставки</label>
+            <input id="lot-step" name="bid_step" type="number" min="0.01" step="0.01" class="field" placeholder="5" required>
+          </div>
+          <div>
+            <label class="field-label" for="lot-currency" data-i18n="sell.priceCurrency">Валюта цен</label>
+            <select id="lot-currency" name="price_currency" class="field" required>
+              <option value="USD" selected>USD ($)</option>
+              <option value="RUB">RUB (₽)</option>
+              <option value="AMD">AMD (֏)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label class="field-label" for="lot-concert-date" data-i18n="sell.concertDate">Дата концерта</label>
+            <input id="lot-concert-date" name="concert_date" type="datetime-local" class="field" required>
+          </div>
+          <div>
+            <label class="field-label" data-i18n="sell.duration">Длительность торгов</label>
+            <div class="grid grid-cols-2 gap-3 mt-1">
+              <div>
+                <label class="field-label" for="lot-duration-hours">Часов</label>
+                <input id="lot-duration-hours" name="duration_hours" type="number" min="0" max="720" step="1" class="field" value="24">
+              </div>
+              <div>
+                <label class="field-label" for="lot-duration-minutes">Минут</label>
+                <input id="lot-duration-minutes" name="duration_minutes" type="number" min="0" max="59" step="1" class="field" value="0">
+              </div>
+            </div>
+            <p class="text-xs text-muted mt-2">От 5 минут до 30 суток (720 часов).</p>
+          </div>
+        </div>
+
+        <div class="rounded p-4" style="border:1px solid rgba(124,92,252,0.18);background:rgba(124,92,252,0.04);">
+          <p class="text-sm font-semibold mb-1">Время на оплату победителем</p>
+          <p class="text-xs text-muted mb-3">Сколько у победителя есть времени, чтобы оплатить выигрыш. Если не оплатит — лот по каскаду перейдёт следующему биддеру с тем же временем.</p>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="field-label" for="lot-payment-window-hours">Часов</label>
+              <input id="lot-payment-window-hours" name="payment_window_hours" type="number" min="0" max="720" step="1" class="field" value="24">
+            </div>
+            <div>
+              <label class="field-label" for="lot-payment-window-minutes">Минут</label>
+              <input id="lot-payment-window-minutes" name="payment_window_minutes" type="number" min="0" max="59" step="1" class="field" value="0">
+            </div>
+          </div>
+          <p class="text-xs text-muted mt-2">Минимум 5 минут, максимум 30 суток.</p>
+        </div>
+
+        <div class="rounded p-4" style="border:1px solid rgba(124,92,252,0.25);background:rgba(124,92,252,0.05);">
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input id="lot-featured" name="featured" type="checkbox" class="mt-1">
+            <div>
+              <p class="text-base font-semibold"><span data-i18n="sell.feature">Поднять в топ</span> <span class="pill pill-amber-soft">+${{ '%.0f'|format(featured_fee) }}</span></p>
+              <p class="mt-1 text-sm text-muted" data-i18n="sell.featureBody">Лот будет показываться в начале каталога с бейджем «Featured». Привлекает в 3-5 раз больше ставок.</p>
+            </div>
+          </label>
+        </div>
+
+        <p id="create-error" class="hidden text-sm font-bold" style="color:var(--danger);"></p>
+
+        <button type="submit" class="btn btn-violet btn-block">
+          <iconify-icon icon="lucide:rocket" class="text-base"></iconify-icon>
+          <span data-i18n="sell.publish">Опубликовать</span> <span id="total-fee-label">за ${{ '%.0f'|format(listing_fee) }}</span>
+        </button>
+      </form>
+    </section>
+
+    <aside class="lg:col-span-5 space-y-5">
+      <div class="balance-tile">
+        <div class="flex items-center justify-between">
+          <p class="text-xs font-bold uppercase tracking-wide text-muted" data-i18n="sell.yourBalance">Ваш баланс</p>
+          <iconify-icon icon="lucide:wallet" class="text-xl text-violet"></iconify-icon>
+        </div>
+        <p class="mt-3 text-3xl font-bold" data-balance-display data-balance-usd="{{ balance }}">${{ '%.2f'|format(balance) }}</p>
+        {% if escrow_total and escrow_total > 0 %}
+        <div class="mt-3 rounded border border-amber/30 bg-amber/5 px-3 py-2">
+          <p class="text-xs uppercase tracking-wide text-amber font-bold" data-i18n="sell.inEscrow">🔒 В эскроу</p>
+          <p class="text-lg font-bold mt-0.5">${{ '%.2f'|format(escrow_total) }}</p>
+          <p class="text-xs text-muted mt-0.5" data-i18n="sell.escrowHint">Поступит после подтверждения покупателей</p>
+        </div>
+        {% endif %}
+        <a href="/me" class="mt-3 btn btn-ghost btn-sm btn-block" data-i18n="sell.topup">Пополнить</a>
+      </div>
+
+      <div class="cyber-card p-6">
+        <p class="text-xs font-bold uppercase tracking-wide text-violet mb-3">Как это работает</p>
+        <ol class="space-y-3 text-sm leading-relaxed text-white">
+          <li class="flex gap-3"><span class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style="background:var(--primary);">1</span><span><strong>Создаёте лот</strong> и оплачиваете листинг (${{ '%.0f'|format(listing_fee) }} с баланса)</span></li>
+          <li class="flex gap-3"><span class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style="background:var(--primary);">2</span><span><strong>Биддеры делают ставки</strong> — таймер тикает</span></li>
+          <li class="flex gap-3"><span class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style="background:var(--primary);">3</span><span><strong>Победитель оплачивает</strong> выигрыш в течение 24 часов</span></li>
+          <li class="flex gap-3"><span class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style="background:var(--primary);">4</span><span><strong>Вы получаете</strong> сумму минус {{ '%.0f'|format(final_value_fee_pct) }}% комиссии платформы</span></li>
+        </ol>
+      </div>
+
+      <div class="cyber-card p-6">
+        <p class="text-xs font-bold uppercase tracking-wide text-violet mb-3" data-i18n="sell.fees">Тарифы</p>
+        <div class="space-y-2.5 text-sm">
+          <div class="flex justify-between">
+            <span class="text-muted">Листинг</span>
+            <span class="font-bold">${{ '%.2f'|format(listing_fee) }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-muted">Поднять в топ</span>
+            <span class="font-bold text-amber">+${{ '%.2f'|format(featured_fee) }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-muted">С финальной цены</span>
+            <span class="font-bold">{{ '%.0f'|format(final_value_fee_pct) }}%</span>
+          </div>
+        </div>
+        <p class="mt-3 text-xs text-muted">Если лот не продастся — листинговая комиссия не возвращается, но процент с продажи не списывается.</p>
+      </div>
+    </aside>
+  </div>
+
+  {% if escrow_payments %}
+  <section class="cyber-card mt-8 p-6">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-wide text-amber" data-i18n="sell.escrowSection">🔒 Эскроу</p>
+        <h2 class="heading mt-1 text-xl font-bold" data-i18n="sell.escrowDeals">Сделки в обработке</h2>
+        <p class="text-xs text-muted mt-1" data-i18n="sell.escrowDealsHint">Отправьте билет покупателю. Деньги поступят на ваш баланс после подтверждения получения.</p>
+      </div>
+      <span class="pill pill-amber-soft">{{ escrow_payments|length }} сделок</span>
+    </div>
+    <div class="space-y-3">
+      {% for ep in escrow_payments %}
+      <div class="rounded border px-4 py-3" style="border-color:{% if ep.buyer_confirmed %}rgba(0,200,150,0.3){% elif ep.ticket_delivered %}rgba(124,92,252,0.3){% else %}rgba(240,165,0,0.3){% endif %};background:rgba(255,255,255,0.02);">
+        <div class="flex items-center justify-between gap-4">
+          <div class="min-w-0">
+            <a href="/lot/{{ ep.lot_id }}" class="text-sm font-semibold hover:text-violet truncate block" data-translate>{{ ep.lot_title }}</a>
+            <p class="text-xs text-muted">Покупатель: <a href="/seller/{{ ep.buyer_id }}" class="text-violet hover:underline">{{ ep.buyer_username }}</a></p>
+          </div>
+          <div class="text-right flex-shrink-0">
+            <p class="font-mono text-base font-bold">${{ ep.amount_usd }}</p>
+            {% if ep.buyer_confirmed %}
+            <span class="pill pill-success">✓ Деньги получены</span>
+            {% elif ep.ticket_delivered %}
+            <span class="pill pill-violet-soft">⏳ Ждём подтверждения</span>
+            {% else %}
+            <span class="pill pill-amber-soft">📦 Отправьте билет</span>
+            {% endif %}
+          </div>
+        </div>
+
+        {% if not ep.ticket_delivered %}
+        <div class="mt-3 pt-3 border-t border-white/[0.06] flex gap-2">
+          <input type="text" placeholder="Код билета (например QR-номер)" data-ticket-input="{{ ep.id }}" class="field flex-1" maxlength="200">
+          <button type="button" class="btn btn-violet btn-sm" data-deliver-ticket="{{ ep.id }}">
+            <iconify-icon icon="lucide:send"></iconify-icon> Отправить
+          </button>
+        </div>
+        {% else %}
+        <div class="mt-3 pt-3 border-t border-white/[0.06]">
+          <p class="text-xs text-muted">Отправлен билет:</p>
+          <p class="font-mono text-sm bg-white/[0.04] rounded px-3 py-2 mt-1 break-all">{{ ep.ticket_code }}</p>
+          {% if ep.buyer_confirmed %}
+          <p class="text-xs text-success mt-2">✓ Покупатель подтвердил получение, деньги переведены</p>
+          {% else %}
+          <p class="text-xs text-amber mt-2">⏳ Ждём подтверждения от покупателя</p>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if my_lots %}
+  <section class="cyber-card mt-8 p-6">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-wide text-violet" data-i18n="sell.myAuctions">Мои аукционы</p>
+        <h2 class="heading mt-1 text-xl font-bold" data-i18n="sell.lotHistory">История лотов</h2>
+      </div>
+      <span class="pill pill-muted">{{ my_lots|length }} лотов</span>
+    </div>
+    <div class="grid gap-2.5">
+      {% for l in my_lots %}
+      <a href="/lot/{{ l.id }}" class="grid grid-cols-[1fr_auto_auto_auto] items-center gap-4 rounded border border-white/[0.06] bg-white/[0.02] px-4 py-3 transition hover:border-violet hover:bg-white/[0.04]">
+        <div class="min-w-0">
+          <p class="truncate text-sm font-semibold" data-translate>{{ l.title }}</p>
+          <p class="text-xs text-muted truncate"><span data-translate>{{ l.artist }}</span> · {{ l.end_time_display }}</p>
+        </div>
+        <span class="pill {% if l.status == 'active' %}pill-violet-soft{% elif l.status == 'ended' %}pill-success{% else %}pill-muted{% endif %}">{{ l.status }}</span>
+        <div class="text-right">
+          <p class="text-sm font-bold">${{ l.current_price_usd }}</p>
+          <p class="text-xs text-muted">{{ l.bid_count }} ставок</p>
+        </div>
+        <iconify-icon icon="lucide:chevron-right" class="text-base text-muted"></iconify-icon>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</main>
+
+<script>
+(function () {
+  const featured = document.getElementById('lot-featured');
+  const label = document.getElementById('total-fee-label');
+  const listingFee = {{ listing_fee }};
+  const featuredFee = {{ featured_fee }};
+
+  const dropZone = document.getElementById('image-drop-zone');
+  const fileInput = document.getElementById('lot-image');
+  const preview = document.getElementById('image-preview');
+  const dropContent = document.getElementById('image-drop-content');
+  const imageError = document.getElementById('image-error');
+
+  function showImageError(msg) {
+    if (imageError) { imageError.textContent = msg; imageError.classList.remove('hidden'); }
+  }
+  function hideImageError() {
+    if (imageError) imageError.classList.add('hidden');
+  }
+
+  function handleFile(file) {
+    hideImageError();
+    if (!file) return;
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowed.includes(file.type)) {
+      showImageError('Допустимы только JPG, PNG, WebP, GIF');
+      return;
+    }
+    if (file.size > 6 * 1024 * 1024) {
+      showImageError('Файл слишком большой — максимум 6 МБ');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      preview.src = e.target.result;
+      preview.classList.remove('hidden');
+      dropContent.classList.add('hidden');
+      dropZone.classList.add('has-image');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  if (dropZone && fileInput) {
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') fileInput.click(); });
+    fileInput.addEventListener('change', () => { if (fileInput.files[0]) handleFile(fileInput.files[0]); });
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        fileInput.files = dt.files;
+        handleFile(file);
+      }
+    });
+    preview.addEventListener('click', (e) => { e.stopPropagation(); fileInput.click(); });
+  }
+  const durationHoursEl = document.getElementById('lot-duration-hours');
+  const durationMinutesEl = document.getElementById('lot-duration-minutes');
+  const startPriceEl = document.getElementById('lot-start-price');
+  const stepEl = document.getElementById('lot-step');
+  const currencyEl = document.getElementById('lot-currency');
+  const RATES = { USD: 1, RUB: 90, AMD: 390 };
+  fetch('/api/rates').then((r) => r.ok ? r.json() : null).then((d) => {
+    if (!d) return;
+    if (d.RUB) RATES.RUB = Number(d.RUB);
+    if (d.AMD) RATES.AMD = Number(d.AMD);
+  }).catch(() => {});
+
+  function updateLabel() {
+    const total = listingFee + (featured.checked ? featuredFee : 0);
+    label.textContent = 'за $' + total.toFixed(0);
+  }
+  featured.addEventListener('change', updateLabel);
+
+  function showError(text) {
+    const err = document.getElementById('create-error');
+    err.textContent = text;
+    err.classList.remove('hidden');
+    err.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  document.getElementById('create-lot-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const err = document.getElementById('create-error');
+    err.classList.add('hidden');
+    const concertLocal = document.getElementById('lot-concert-date').value;
+    if (!concertLocal) { showError('Укажите дату концерта'); return; }
+
+    let durationH;
+    let durationM;
+    {
+      const h = parseInt(durationHoursEl.value, 10);
+      const m = parseInt(durationMinutesEl.value, 10);
+      if (Number.isNaN(h) || h < 0 || h > 720) { showError('Часов: число от 0 до 720'); durationHoursEl.focus(); return; }
+      if (Number.isNaN(m) || m < 0 || m > 59) { showError('Минут: число от 0 до 59'); durationMinutesEl.focus(); return; }
+      const totalMin = h * 60 + m;
+      if (totalMin < 5) { showError('Минимальная длительность торгов — 5 минут'); durationHoursEl.focus(); return; }
+      if (totalMin > 720 * 60) { showError('Максимум 720 часов'); return; }
+      durationH = h;
+      durationM = m;
+    }
+
+    const priceCurrency = (currencyEl && currencyEl.value) || 'USD';
+    const fxRate = RATES[priceCurrency] || 1;
+    const startInput = Number(startPriceEl.value);
+    const stepInput = Number(stepEl.value);
+    if (!startInput || startInput <= 0) { showError('Стартовая цена должна быть больше нуля'); startPriceEl.focus(); return; }
+    if (!stepInput || stepInput <= 0) { showError('Шаг ставки должен быть больше нуля'); stepEl.focus(); return; }
+    if (stepInput >= startInput) { showError('Шаг должен быть меньше стартовой цены'); stepEl.focus(); return; }
+    const startUsd = startInput / fxRate;
+    const stepUsd = stepInput / fxRate;
+    if (startUsd < 1) { showError('Стартовая цена должна быть не меньше эквивалента $1 (≈ ' + (1 * fxRate).toFixed(2) + ' ' + priceCurrency + ')'); return; }
+    if (startUsd > 1000000) { showError('Стартовая цена не может превышать $1 000 000 (≈ ' + (1000000 * fxRate).toLocaleString('ru-RU') + ' ' + priceCurrency + ')'); return; }
+
+    const pwHours = parseInt(document.getElementById('lot-payment-window-hours').value, 10);
+    const pwMinutes = parseInt(document.getElementById('lot-payment-window-minutes').value, 10);
+    if (Number.isNaN(pwHours) || pwHours < 0 || pwHours > 720) { showError('Часов на оплату: введите число от 0 до 720'); return; }
+    if (Number.isNaN(pwMinutes) || pwMinutes < 0 || pwMinutes > 59) { showError('Минут на оплату: число от 0 до 59'); return; }
+    if (pwHours * 60 + pwMinutes < 5) { showError('Минимальное время на оплату — 5 минут'); return; }
+
+    const payload = {
+      title: document.getElementById('lot-title').value.trim(),
+      artist: document.getElementById('lot-artist').value.trim(),
+      description: document.getElementById('lot-description').value.trim(),
+      lot_type: document.getElementById('lot-type').value,
+      start_price_usd: Number(startUsd.toFixed(2)),
+      bid_step_usd: Number(stepUsd.toFixed(2)),
+      concert_date: new Date(concertLocal).toISOString(),
+      duration_hours: durationH,
+      duration_minutes: durationM,
+      payment_window_hours: pwHours,
+      payment_window_minutes: pwMinutes,
+      featured: featured.checked,
+    };
+    try {
+      const resp = await fetch('/api/lots/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        const map = {
+          insufficient_balance: 'Недостаточно средств. Нужно $' + (data.required_usd || 0).toFixed(2) + ', доступно $' + (data.balance_usd || 0).toFixed(2),
+          invalid_title: 'Название должно быть от 3 до 200 символов',
+          invalid_artist: 'Укажите артиста (не короче 2 символов)',
+          invalid_lot_type: 'Выберите тип лота',
+          invalid_start_price: 'Стартовая цена от $1 до $1 000 000',
+          invalid_step: 'Шаг должен быть положительным и меньше стартовой цены',
+          invalid_duration: 'Длительность от 1 до 720 часов',
+          invalid_payment_window: data.message || 'Время оплаты задано некорректно',
+          invalid_concert_date: 'Неверный формат даты концерта',
+          concert_date_in_past: 'Концерт должен быть в будущем',
+          unauthorized: 'Войдите в систему',
+        };
+        showError(map[data.error] || ('Ошибка: ' + (data.error || resp.status)));
+        return;
+      }
+      const fileInput = document.getElementById('lot-image');
+      if (fileInput && fileInput.files && fileInput.files[0] && data.lot_id) {
+        const fd = new FormData();
+        fd.append('image', fileInput.files[0]);
+        try {
+          const imgResp = await fetch('/api/lot/' + data.lot_id + '/image', { method: 'POST', body: fd });
+          if (!imgResp.ok) {
+            const imgData = await imgResp.json().catch(() => ({}));
+            showError('Лот создан, но картинку загрузить не удалось: ' + (imgData.message || imgData.error || imgResp.status));
+            setTimeout(() => { window.location.href = data.redirect || '/'; }, 2000);
+            return;
+          }
+        } catch (uploadErr) {
+          showError('Лот создан, но картинку загрузить не удалось: сетевая ошибка');
+          setTimeout(() => { window.location.href = data.redirect || '/'; }, 2000);
+          return;
+        }
+      }
+      window.location.href = data.redirect || '/';
+    } catch (e) {
+      showError('Сетевая ошибка. Попробуйте ещё раз.');
+    }
+  });
+
+  document.querySelectorAll('[data-deliver-ticket]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const pid = btn.getAttribute('data-deliver-ticket');
+      const input = document.querySelector('[data-ticket-input="' + pid + '"]');
+      if (!input) return;
+      const code = (input.value || '').trim();
+      const showInline = (msg) => {
+        let helper = btn.parentElement.querySelector('.deliver-error');
+        if (!helper) {
+          helper = document.createElement('p');
+          helper.className = 'deliver-error text-xs text-amber mt-1 w-full';
+          btn.parentElement.appendChild(helper);
+        }
+        helper.textContent = msg;
+        setTimeout(() => { if (helper) helper.textContent = ''; }, 4000);
+      };
+      if (code.length < 4) {
+        input.focus();
+        showInline('Код билета должен быть не короче 4 символов');
+        return;
+      }
+      btn.disabled = true;
+      const oldHtml = btn.innerHTML;
+      btn.innerHTML = '<iconify-icon icon="lucide:loader-2"></iconify-icon> Отправка...';
+      try {
+        const resp = await fetch('/api/payment/' + pid + '/deliver-ticket', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ticket_code: code }),
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+          showInline(data.error === 'invalid_ticket_code' ? 'Код билета 4-200 символов' : 'Не удалось отправить');
+          btn.disabled = false;
+          btn.innerHTML = oldHtml;
+          return;
+        }
+        window.location.reload();
+      } catch (e) {
+        showInline('Сетевая ошибка');
+        btn.disabled = false;
+        btn.innerHTML = oldHtml;
+      }
+    });
+  });
+})();
+</script>
+{% endblock %}

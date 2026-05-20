@@ -1,0 +1,707 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}BidStage · Премиум аукцион билетов{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}?v={{ range(100000,999999)|random }}">
+  <style>
+    html, body { margin: 0; padding: 0; }
+    body { padding-top: 72px; }
+    .bs-header { height: 72px; }
+    .lot-cover{position:relative;display:block;width:100%;height:200px;min-height:200px;overflow:hidden;border-radius:8px;margin-bottom:1rem;background:linear-gradient(135deg,#7c5cfc 0%,#1a1a2e 50%,#f0a500 100%)}
+    .lot-cover-grad-0{background:linear-gradient(135deg,#7c5cfc 0%,#1a1a2e 50%,#f0a500 100%)!important}
+    .lot-cover-grad-1{background:linear-gradient(135deg,#f0a500 0%,#7c5cfc 60%,#0a0a0f 100%)!important}
+    .lot-cover-grad-2{background:linear-gradient(135deg,#0a0a0f 0%,#7c5cfc 50%,#00c896 100%)!important}
+    .lot-cover-grad-3{background:linear-gradient(135deg,#7c5cfc 0%,#ff4d6d 50%,#f0a500 100%)!important}
+    /* Иконка-билет по центру градиента — закрывается фотографией если она есть (img z-index:2 > before z-index:1) */
+    .lot-cover::before{content:"\1f3ab";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:3.5rem;opacity:.45;z-index:1;pointer-events:none}
+    .lot-cover.has-image::before{display:none}
+    .lot-cover.has-image .lot-cover-art{display:none!important}
+    .lot-cover::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,0.18),transparent 45%);pointer-events:none;z-index:1}
+    .lot-cover-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2}
+    .lot-cover-fade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 40%,rgba(0,0,0,0.55) 100%);pointer-events:none;z-index:3}
+    .lot-cover-pills{position:absolute;top:.6rem;left:.6rem;display:flex;gap:.4rem;flex-wrap:wrap;z-index:4}
+    .lot-cover-extra{position:absolute;bottom:.6rem;right:.6rem;z-index:4}
+    .lot-cover-foot{position:absolute;bottom:.7rem;left:.7rem;right:.7rem;z-index:4}
+    .lot-cover-title{font-family:'Syne','Inter',sans-serif;font-weight:700;font-size:1rem;line-height:1.15;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.65);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .lot-cover-artist{font-size:.75rem;color:rgba(255,255,255,.78);margin:4px 0 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .lot-card{display:block}
+    .bs-bell{position:relative;display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:8px;border:1px solid var(--border);background:rgba(124,92,252,0.08);color:#fff;cursor:pointer}
+    .bs-bell:hover{background:rgba(124,92,252,0.18)}
+    .bs-bell-badge{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#ff4d6d;color:#fff;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #0a0a0f}
+    .bs-bell-dropdown{position:absolute;top:48px;right:0;width:380px;max-height:520px;overflow:hidden;background:#0e0e16;border:1px solid var(--border);border-radius:10px;box-shadow:0 18px 48px rgba(0,0,0,.55);z-index:300;display:none;flex-direction:column}
+    .bs-bell-dropdown.is-open{display:flex}
+    .bs-bell-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border)}
+    .bs-bell-list{flex:1;overflow-y:auto}
+    .bs-notif{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.05);cursor:default}
+    .bs-notif-unread{background:rgba(124,92,252,.06)}
+    .bs-notif-title{font-weight:700;font-size:.85rem}
+    .bs-notif-body{font-size:.78rem;color:rgba(255,255,255,.72);white-space:pre-wrap}
+    .bs-notif-meta{display:flex;align-items:center;justify-content:space-between;font-size:.7rem;color:rgba(255,255,255,.42);margin-top:4px}
+    .bs-notif-mark{font-size:.7rem;color:#7c5cfc;cursor:pointer;background:none;border:0;padding:0}
+    .bs-notif-mark:hover{text-decoration:underline}
+    .bs-notif-empty{padding:32px 14px;text-align:center;color:rgba(255,255,255,.5);font-size:.85rem}
+    .bs-nav-badge{margin-left:auto;background:#ff4d6d;color:#fff;font-size:.7rem;font-weight:700;padding:1px 7px;border-radius:9px;min-width:20px;text-align:center}
+    .bs-toast-persistent{background:#181828;border:1px solid var(--violet);border-radius:10px;padding:14px 16px;margin-bottom:8px;display:flex;flex-direction:column;gap:6px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+    .bs-toast-persistent-title{font-weight:700;font-size:.9rem}
+    .bs-toast-persistent-body{font-size:.78rem;color:rgba(255,255,255,.74);white-space:pre-wrap}
+    .bs-toast-persistent-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
+    .bs-toast-persistent-btn{font-size:.75rem;padding:6px 12px;border-radius:6px;border:1px solid var(--violet);background:rgba(124,92,252,.15);color:#fff;cursor:pointer}
+    .bs-toast-persistent-btn:hover{background:rgba(124,92,252,.3)}
+    #bs-persistent-stack{position:fixed;right:16px;bottom:16px;width:360px;max-width:calc(100vw - 32px);z-index:250;display:flex;flex-direction:column}
+    .bs-chat-row-bot{border-left:3px solid var(--violet)}
+    .bs-chat-avatar-bot{background:linear-gradient(135deg,#7c5cfc,#f0a500)!important;color:#fff;font-size:18px}
+    .bs-chat-bot-tag{display:inline-block;font-size:.6rem;font-weight:700;padding:1px 6px;border-radius:4px;background:rgba(124,92,252,.2);color:#a78cff;margin-left:4px;text-transform:uppercase;letter-spacing:.05em}
+    .bs-msg-bot-bubble{background:linear-gradient(135deg,rgba(124,92,252,.18),rgba(240,165,0,.14))!important;border:1px solid rgba(124,92,252,.35)}
+    .bs-msg-bot-actions{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
+    .bs-msg-bot-btn{font-size:.78rem;padding:7px 14px;border-radius:6px;background:#7c5cfc;border:0;color:#fff;cursor:pointer;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:5px}
+    .bs-msg-bot-btn:hover{background:#9a7dff}
+    .bs-msg-bot-btn-secondary{background:transparent;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.85)}
+    .bs-msg-bot-btn-secondary:hover{background:rgba(255,255,255,.05)}
+    .bs-search-wrap{width:260px;max-width:35vw}
+    .bs-search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.55);font-size:1rem;pointer-events:none}
+    .bs-search-input{width:100%;padding:8px 12px 8px 36px;border-radius:8px;border:1px solid var(--border);background:rgba(124,92,252,.06);color:#fff;font-size:.85rem;outline:none;transition:border-color .15s}
+    .bs-search-input:focus{border-color:#7c5cfc;background:rgba(124,92,252,.12)}
+    .bs-search-input::placeholder{color:rgba(255,255,255,.45)}
+    .bs-search-dropdown{position:absolute;top:42px;left:0;right:0;background:#0e0e16;border:1px solid var(--border);border-radius:10px;box-shadow:0 18px 48px rgba(0,0,0,.55);z-index:301;max-height:420px;overflow-y:auto;display:none}
+    .bs-search-dropdown.is-open{display:block}
+    .bs-search-result{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;transition:background .12s;color:#fff;text-decoration:none}
+    .bs-search-result:last-child{border-bottom:0}
+    .bs-search-result:hover,.bs-search-result.is-active{background:rgba(124,92,252,.14)}
+    .bs-search-thumb{width:38px;height:38px;border-radius:6px;background:linear-gradient(135deg,#7c5cfc,#1a1a2e);flex-shrink:0;background-size:cover;background-position:center}
+    .bs-search-info{min-width:0;flex:1}
+    .bs-search-title{font-size:.85rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .bs-search-sub{font-size:.7rem;color:rgba(255,255,255,.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .bs-search-price{font-size:.8rem;font-weight:700;color:#7c5cfc;flex-shrink:0}
+    .bs-search-empty{padding:20px;text-align:center;color:rgba(255,255,255,.5);font-size:.8rem}
+    .bs-search-status-ended{color:rgba(255,255,255,.4)}
+    /* Защита от выезжающих больших чисел в превью валют и инпутах */
+    #amd-preview,#rub-preview,#usd-preview{font-size:1rem;line-height:1.15;word-break:break-all;overflow-wrap:anywhere;white-space:normal;max-width:100%;display:block}
+    #bid-amount{max-width:100%;width:100%;min-width:0;text-overflow:ellipsis;overflow:hidden}
+    /* Скрываем нативные стрелки number-инпутов чтобы текст не наезжал на них */
+    input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+    input[type=number]{-moz-appearance:textfield}
+
+    /* ============ MOBILE LAYOUT ============ */
+    html,body{max-width:100vw;overflow-x:hidden}
+    /* Карусель: touch-скролл */
+    .carousel-track{scroll-behavior:smooth;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y}
+    /* Блоки лота не должны вылезать */
+    .lot-card,.cyber-card{max-width:100%;min-width:0}
+    .cyber-card{overflow:hidden}
+    /* Длинные имена/числа везде переносятся */
+    .truncate-soft{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+
+    @media (max-width: 767px){
+      body{padding-top:60px}
+      .bs-header{height:60px}
+      .bs-header > div{padding-left:10px!important;padding-right:10px!important;gap:6px!important}
+      .bs-header .heading{font-size:1.05rem!important;letter-spacing:-.02em}
+      /* На узких экранах принудительно прячем валюту/язык/«в сети»/поиск */
+      .bs-header .seg-compact{display:none!important}
+      .bs-header .pill{display:none!important}
+      .bs-search-wrap{display:none!important}
+      /* Кнопки в шапке компактнее */
+      .bs-header .btn-sm{padding:6px 8px!important;font-size:.7rem!important;gap:4px!important}
+      .bs-header .bs-bell{width:34px;height:34px}
+      /* Кошелёк — только сумма, без слова «Войти» рядом */
+      .bs-header a[href="/me"]{padding:6px 10px!important;font-size:.75rem!important}
+      /* Колокольчик dropdown — почти на весь экран */
+      .bs-bell-dropdown{position:fixed;top:64px;right:8px;left:8px;width:auto;max-height:70vh}
+      /* Stack persistent toasts — не накладываются на хедер */
+      #bs-persistent-stack{right:8px!important;left:8px!important;width:auto!important;bottom:8px!important}
+
+      /* Лот / индекс — заголовки и подиум */
+      .lot-card{font-size:.9rem}
+      .lot-cover-title{font-size:.95rem!important}
+
+      /* Гарантируем что обложка карточки лота на мобиле имеет высоту */
+      .lot-cover{
+        height:180px!important;
+        min-height:180px!important;
+      }
+      .lot-cover-img{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover;z-index:2}
+      .lot-cover-fade{position:absolute!important;inset:0!important;z-index:3}
+      .lot-cover-pills,.lot-cover-foot,.lot-cover-extra{z-index:4!important}
+
+      /* Hero-карточка СТРАНИЦЫ ЛОТА: уплотняем pill-ы и шрифт заголовка */
+      .lot-card > .lot-cover[style*="16/6"]{
+        aspect-ratio:16/8!important;
+        min-height:240px!important;
+      }
+      .lot-card > .lot-cover[style*="16/6"]::before{display:none!important}
+      .lot-card > .lot-cover[style*="16/6"] > .absolute.top-4{
+        top:8px!important;left:8px!important;right:8px!important;gap:4px!important
+      }
+      .lot-card > .lot-cover[style*="16/6"] > .absolute.top-4 .pill{font-size:.6rem!important;padding:2px 8px!important}
+      .lot-card > .lot-cover[style*="16/6"] > .absolute.bottom-4{
+        bottom:8px!important;left:8px!important;right:8px!important
+      }
+      .lot-card > .lot-cover[style*="16/6"] > .absolute.bottom-4 .heading{font-size:1.05rem!important;line-height:1.2!important}
+      .lot-card > .lot-cover[style*="16/6"] > .absolute.bottom-4 .flex-wrap{gap:8px!important;margin-top:6px!important}
+      .lot-card > .lot-cover[style*="16/6"] > .absolute.bottom-4 p{font-size:.65rem!important}
+
+      /* Подиум: переносить в столбец */
+      .podium-grid{grid-template-columns:1fr!important}
+      /* Любые grid-cols-3 / 4 — в одну/две колонки */
+      .force-mobile-2col{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+      /* Большие заголовки на мобиле меньше */
+      .heading.text-3xl,.heading.text-4xl,.heading.text-5xl{font-size:1.5rem!important;line-height:1.15}
+      .heading.text-2xl{font-size:1.25rem!important}
+      /* Hero и метрики */
+      .balance-tile{padding:1rem!important}
+      /* Tabs на странице лота — горизонтальный скролл */
+      #lot-tabs{overflow-x:auto;flex-wrap:nowrap}
+      #lot-tabs .lot-tab{flex:0 0 auto!important;padding:10px 14px!important;font-size:.7rem!important}
+      /* Модалки на мобиле — почти full-screen */
+      .modal-card{margin:8px!important;padding:1.25rem!important;max-width:calc(100vw - 16px)!important;max-height:calc(100vh - 80px)!important;overflow-y:auto}
+      .modal-overlay{padding:0!important}
+      /* В модалке ставки — компактные шаги/превью */
+      #bid-modal .modal-card .grid.grid-cols-3.gap-2 > div{padding:8px 4px!important}
+      #amd-preview,#rub-preview,#usd-preview{font-size:.85rem!important}
+      .step-indicator{font-size:.6rem!important;padding:4px 6px!important;letter-spacing:.02em}
+      #bid-amount{font-size:1.1rem!important}
+      .quick-bid{font-size:.7rem!important;padding:6px 4px!important}
+      /* Ссылка «Назад» — не должна занимать ширину */
+      main{padding-left:14px!important;padding-right:14px!important}
+
+      /* Адаптивная карусель «Топ» */
+      .carousel-viewport{height:380px!important}
+      .carousel-track > a.lot-card{width:calc(100vw - 80px)!important;max-width:340px}
+      .carousel-viewport::before,.carousel-viewport::after{width:24px!important}
+    }
+
+    @media (max-width: 480px){
+      .bs-header .heading span:not(.text-violet){display:none}
+      .bs-header a[href="/me"] span{font-size:.7rem!important}
+    }
+
+    /* Между mobile и desktop тоже сжимаем валюту/язык/«в сети» */
+    @media (max-width: 1023px){
+      .bs-header .seg-compact{display:none!important}
+    }
+    @media (max-width: 1279px){
+      .bs-header > div > div:first-child .pill,
+      .bs-header > div > div:last-child > .pill{display:none!important}
+    }
+  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap&subset=cyrillic,cyrillic-ext,latin,latin-ext" rel="stylesheet">
+</head>
+<body class="gradient-mesh" {% if me %}data-current-user="{{ me.username }}"{% endif %}>
+  <div class="scanline" style="display:none;"></div>
+
+  <header class="bs-header border-b border-white/[0.05] bg-[#0a0a0f]/85 backdrop-blur-md" style="position:fixed;top:0;left:0;right:0;z-index:200;">
+    <div class="mx-auto flex max-w-[1440px] items-center justify-between gap-3 px-4 py-3 lg:px-12 lg:py-4">
+      <div class="flex items-center gap-3 min-w-0 flex-shrink overflow-hidden">
+        <button type="button" id="bs-menu-toggle" class="btn btn-ghost btn-sm flex-shrink-0" aria-label="Меню">
+          <iconify-icon icon="lucide:menu" class="text-lg"></iconify-icon>
+        </button>
+        <a href="/" class="heading flex items-center gap-1 text-xl font-bold tracking-tighter sm:text-2xl flex-shrink-0">
+          <span class="text-violet">BID</span><span>STAGE</span>
+        </a>
+        <div class="bs-search-wrap relative hidden md:block">
+          <iconify-icon icon="lucide:search" class="bs-search-icon"></iconify-icon>
+          <input type="text" id="bs-global-search" class="bs-search-input" placeholder="Поиск аукционов..." autocomplete="off">
+          <div id="bs-global-search-dropdown" class="bs-search-dropdown" role="listbox"></div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 justify-end flex-shrink-0" style="flex-wrap:nowrap;">
+        <span class="hidden xl:inline-flex pill pill-violet-soft">
+          <span class="inline-block h-1.5 w-1.5 rounded-full animate-pulse" style="background:var(--success);"></span>
+          <span data-online-count>0</span> <span data-i18n="header.online">в сети</span>
+        </span>
+        <div class="seg seg-compact hidden lg:flex" aria-label="Валюта">
+          <button type="button" data-currency="AMD" class="currency-btn seg-btn seg-btn-active">AMD</button>
+          <button type="button" data-currency="RUB" class="currency-btn seg-btn">RUB</button>
+          <button type="button" data-currency="USD" class="currency-btn seg-btn">USD</button>
+        </div>
+        <div class="seg seg-compact hidden lg:flex" aria-label="Язык">
+          <button type="button" data-lang="ru" class="lang-btn seg-btn seg-btn-active">RU</button>
+          <button type="button" data-lang="hy" class="lang-btn seg-btn">HY</button>
+          <button type="button" data-lang="en" class="lang-btn seg-btn">EN</button>
+        </div>
+        {% if me %}
+          <div class="relative" id="bs-bell-wrap">
+            <button type="button" id="bs-bell-btn" class="bs-bell" aria-label="Уведомления">
+              <iconify-icon icon="lucide:bell" class="text-lg"></iconify-icon>
+              <span id="bs-bell-badge" class="bs-bell-badge" style="{% if not notif_unread %}display:none;{% endif %}">{{ notif_unread }}</span>
+            </button>
+            <div id="bs-bell-dropdown" class="bs-bell-dropdown" role="menu">
+              <div class="bs-bell-head">
+                <p class="text-sm font-bold">Уведомления</p>
+                <div class="flex items-center gap-2">
+                  <button type="button" id="bs-bell-mark-all" class="bs-notif-mark">Прочитать всё</button>
+                  <a href="/notifications" class="bs-notif-mark">Все</a>
+                </div>
+              </div>
+              <div id="bs-bell-list" class="bs-bell-list">
+                <div class="bs-notif-empty">Загрузка...</div>
+              </div>
+            </div>
+          </div>
+          <a href="/me" class="btn btn-outline btn-sm">
+            <iconify-icon icon="lucide:wallet" class="text-base"></iconify-icon>
+            <span data-balance-display data-balance-usd="{{ me.balance_usd }}">${{ '%.2f'|format(me.balance_usd) }}</span>
+          </a>
+        {% else %}
+          <a href="/auth/login" class="btn btn-ghost btn-sm" data-i18n="header.login">Войти</a>
+          <a href="/auth/register" class="btn btn-violet btn-sm" data-i18n="header.signup">Регистрация</a>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <aside id="bs-sidebar" class="bs-sidebar" aria-hidden="true">
+    <div class="bs-sidebar-inner">
+      <div class="flex items-center justify-between mb-6">
+        <a href="/" class="heading flex items-center gap-1 text-xl font-bold tracking-tighter">
+          <span class="text-violet">BID</span><span>STAGE</span>
+        </a>
+        <button type="button" id="bs-sidebar-close" class="btn btn-ghost btn-sm" aria-label="Закрыть">
+          <iconify-icon icon="lucide:x" class="text-lg"></iconify-icon>
+        </button>
+      </div>
+      {% if me %}
+      <div class="mb-6 rounded p-4" style="border:1px solid var(--border);background:rgba(124,92,252,0.06);">
+        <p class="text-xs uppercase tracking-wide text-muted">{{ me.username }}</p>
+        <p class="text-lg font-bold mt-1" data-balance-display data-balance-usd="{{ me.balance_usd }}">${{ '%.2f'|format(me.balance_usd) }}</p>
+      </div>
+      {% endif %}
+      <nav class="flex flex-col gap-1">
+        <a href="/" class="bs-nav-item"><iconify-icon icon="lucide:home"></iconify-icon> <span data-i18n="nav.home">Главная</span></a>
+        <a href="/#lots" class="bs-nav-item"><iconify-icon icon="lucide:gavel"></iconify-icon> <span data-i18n="nav.active">Активные торги</span></a>
+        <a href="/how-it-works" class="bs-nav-item"><iconify-icon icon="lucide:book-open"></iconify-icon> <span data-i18n="nav.how">Как работает</span></a>
+        <a href="/hall-of-fame" class="bs-nav-item"><iconify-icon icon="lucide:trophy"></iconify-icon> <span data-i18n="nav.hall">Зал славы</span></a>
+        {% if me %}
+        <a href="/sell" class="bs-nav-item text-amber"><iconify-icon icon="lucide:plus-circle"></iconify-icon> <span data-i18n="nav.sell">Продать</span></a>
+        <a href="/chats" class="bs-nav-item"><iconify-icon icon="lucide:message-circle"></iconify-icon> <span data-i18n="nav.chats">Чаты</span><span id="bs-nav-chat-badge" class="bs-nav-badge" style="{% if not chat_unread %}display:none;{% endif %}">{{ chat_unread }}</span></a>
+        <a href="/notifications" class="bs-nav-item"><iconify-icon icon="lucide:bell"></iconify-icon> <span>Уведомления</span><span id="bs-nav-notif-badge" class="bs-nav-badge" style="{% if not notif_unread %}display:none;{% endif %}">{{ notif_unread }}</span></a>
+        <a href="/me" class="bs-nav-item"><iconify-icon icon="lucide:user"></iconify-icon> <span data-i18n="nav.profile">Профиль</span></a>
+        <button type="button" onclick="bidstageLogout()" class="bs-nav-item text-left"><iconify-icon icon="lucide:log-out"></iconify-icon> <span data-i18n="header.logout">Выйти</span></button>
+        {% else %}
+        <a href="/auth/login" class="bs-nav-item"><iconify-icon icon="lucide:log-in"></iconify-icon> <span data-i18n="header.login">Войти</span></a>
+        <a href="/auth/register" class="bs-nav-item text-violet"><iconify-icon icon="lucide:user-plus"></iconify-icon> <span data-i18n="header.signup">Регистрация</span></a>
+        {% endif %}
+      </nav>
+    </div>
+    <div class="bs-sidebar-backdrop" id="bs-sidebar-backdrop"></div>
+  </aside>
+
+  {% block content %}{% endblock %}
+
+  {% if me %}
+  <div id="bs-persistent-stack" aria-live="polite"></div>
+  {% endif %}
+
+  <footer class="border-t border-white/[0.05] mt-12">
+    <div class="mx-auto flex max-w-[1440px] flex-col items-start justify-between gap-4 px-6 py-8 text-xs text-muted lg:flex-row lg:px-12">
+      <p>© BidStage · Премиум аукцион концертных лотов</p>
+      <p class="font-mono">v1.0 · протокол подтверждения шары · анти-снайпинг 180с</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}?v={{ range(100000,999999)|random }}"></script>
+  {% block scripts %}{% endblock %}
+  <script>
+    function bidstageLogout() {
+      fetch('/auth/logout', { method: 'POST' }).finally(() => window.location.href = '/');
+    }
+    (function () {
+      const sidebar = document.getElementById('bs-sidebar');
+      const toggle = document.getElementById('bs-menu-toggle');
+      const closeBtn = document.getElementById('bs-sidebar-close');
+      const backdrop = document.getElementById('bs-sidebar-backdrop');
+      if (!sidebar || !toggle) return;
+      const open = () => { sidebar.classList.add('is-open'); sidebar.setAttribute('aria-hidden', 'false'); };
+      const close = () => { sidebar.classList.remove('is-open'); sidebar.setAttribute('aria-hidden', 'true'); };
+      toggle.addEventListener('click', open);
+      if (closeBtn) closeBtn.addEventListener('click', close);
+      if (backdrop) backdrop.addEventListener('click', close);
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+    })();
+
+    (function(){
+      const input = document.getElementById('bs-global-search');
+      const dropdown = document.getElementById('bs-global-search-dropdown');
+      if (!input || !dropdown) return;
+      let timer = null;
+      let activeIdx = -1;
+      let resultUrls = [];
+
+      function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s==null?'':String(s); return d.innerHTML; }
+
+      function close(){ dropdown.classList.remove('is-open'); activeIdx = -1; }
+
+      function render(results, query){
+        if (!results.length) {
+          dropdown.innerHTML = '<div class="bs-search-empty">Ничего не нашлось по «' + escapeHtml(query) + '»</div>';
+          dropdown.classList.add('is-open');
+          resultUrls = [];
+          return;
+        }
+        const html = results.map((r, i) => {
+          const thumb = r.image_url ? 'style="background-image:url(\'' + r.image_url + '\');background-size:cover;background-position:center;"' : '';
+          const ended = r.status !== 'active';
+          return '<a class="bs-search-result' + (ended ? ' bs-search-status-ended' : '') + '" data-idx="' + i + '" href="' + r.url + '">' +
+            '<div class="bs-search-thumb" ' + thumb + '></div>' +
+            '<div class="bs-search-info">' +
+              '<div class="bs-search-title">' + escapeHtml(r.title) + '</div>' +
+              '<div class="bs-search-sub">' + escapeHtml(r.artist || '') + ' · ' + escapeHtml(r.end_time_display || '') + (ended ? ' · завершён' : '') + '</div>' +
+            '</div>' +
+            '<div class="bs-search-price">$' + escapeHtml(r.current_price_usd) + '</div>' +
+          '</a>';
+        }).join('');
+        dropdown.innerHTML = html + '<a class="bs-search-result" href="/?q=' + encodeURIComponent(query) + '" style="justify-content:center;color:#7c5cfc;font-size:.78rem;font-weight:600;">Показать все результаты в каталоге →</a>';
+        dropdown.classList.add('is-open');
+        resultUrls = Array.from(dropdown.querySelectorAll('.bs-search-result')).map(a => a.href);
+        activeIdx = -1;
+      }
+
+      async function run(q){
+        if (q.length < 2) { close(); return; }
+        try {
+          const r = await fetch('/api/search?q=' + encodeURIComponent(q));
+          if (!r.ok) return;
+          const data = await r.json();
+          render(data.results || [], q);
+        } catch(e){}
+      }
+
+      input.addEventListener('input', () => {
+        const q = input.value.trim();
+        clearTimeout(timer);
+        if (q.length < 2) { close(); return; }
+        timer = setTimeout(() => run(q), 180);
+      });
+      input.addEventListener('focus', () => { if (input.value.trim().length >= 2) run(input.value.trim()); });
+      input.addEventListener('keydown', (e) => {
+        const items = dropdown.querySelectorAll('.bs-search-result');
+        if (e.key === 'ArrowDown') {
+          if (!items.length) return;
+          e.preventDefault();
+          activeIdx = Math.min(activeIdx + 1, items.length - 1);
+          items.forEach((it, i) => it.classList.toggle('is-active', i === activeIdx));
+          items[activeIdx].scrollIntoView({ block: 'nearest' });
+        } else if (e.key === 'ArrowUp') {
+          if (!items.length) return;
+          e.preventDefault();
+          activeIdx = Math.max(activeIdx - 1, 0);
+          items.forEach((it, i) => it.classList.toggle('is-active', i === activeIdx));
+          items[activeIdx].scrollIntoView({ block: 'nearest' });
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          if (activeIdx >= 0 && resultUrls[activeIdx]) {
+            window.location.href = resultUrls[activeIdx];
+          } else if (input.value.trim().length >= 2) {
+            window.location.href = '/?q=' + encodeURIComponent(input.value.trim());
+          }
+        } else if (e.key === 'Escape') {
+          close();
+          input.blur();
+        }
+      });
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.bs-search-wrap')) close();
+      });
+    })();
+  </script>
+
+  {% if me %}
+  <script>
+  (function(){
+    const ME_ID = {{ me.id }};
+    const bellBtn = document.getElementById('bs-bell-btn');
+    const bellDropdown = document.getElementById('bs-bell-dropdown');
+    const bellList = document.getElementById('bs-bell-list');
+    const bellBadge = document.getElementById('bs-bell-badge');
+    const bellMarkAll = document.getElementById('bs-bell-mark-all');
+    const navNotifBadge = document.getElementById('bs-nav-notif-badge');
+    const navChatBadge = document.getElementById('bs-nav-chat-badge');
+    const persistentStack = document.getElementById('bs-persistent-stack');
+    const ACK_KEY = 'bs.notif.acked';
+    let acked;
+    try { acked = new Set(JSON.parse(localStorage.getItem(ACK_KEY) || '[]')); } catch(e) { acked = new Set(); }
+    function persistAcked(){ try { localStorage.setItem(ACK_KEY, JSON.stringify(Array.from(acked).slice(-200))); } catch(e){} }
+
+    function fmtTime(iso){
+      try {
+        const d = iso ? new Date(iso) : new Date();
+        return d.toLocaleString('ru-RU', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+      } catch(e){ return ''; }
+    }
+
+    function setBadge(el, n){
+      if (!el) return;
+      if (!n || n <= 0) { el.style.display = 'none'; el.textContent = '0'; }
+      else { el.style.display = ''; el.textContent = String(n > 99 ? '99+' : n); }
+    }
+
+    function setUnread(n){
+      setBadge(bellBadge, n);
+      setBadge(navNotifBadge, n);
+    }
+
+    function setChatUnread(n){ setBadge(navChatBadge, n); }
+
+    async function refreshChatUnread(){
+      try {
+        const r = await fetch('/api/chat/unread');
+        if (!r.ok) return;
+        const d = await r.json();
+        setChatUnread(d.unread || 0);
+      } catch(e){}
+    }
+
+    function escapeHtml(s){
+      const d = document.createElement('div');
+      d.textContent = s == null ? '' : String(s);
+      return d.innerHTML;
+    }
+
+    function renderNotifRow(n){
+      const wrap = document.createElement('div');
+      wrap.className = 'bs-notif' + (n.read ? '' : ' bs-notif-unread');
+      wrap.dataset.id = String(n.id);
+      const t = document.createElement('div');
+      t.className = 'bs-notif-title';
+      t.textContent = n.title || '';
+      const b = document.createElement('div');
+      b.className = 'bs-notif-body';
+      b.textContent = n.body || '';
+      const meta = document.createElement('div');
+      meta.className = 'bs-notif-meta';
+      const time = document.createElement('span');
+      time.textContent = fmtTime(n.created_at);
+      meta.appendChild(time);
+      if (!n.read) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'bs-notif-mark';
+        btn.textContent = 'Прочитано';
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          await markRead(n.id);
+        });
+        meta.appendChild(btn);
+      }
+      wrap.appendChild(t);
+      wrap.appendChild(b);
+      wrap.appendChild(meta);
+      if (n.lot_id) {
+        wrap.style.cursor = 'pointer';
+        wrap.addEventListener('click', () => { window.location.href = '/lot/' + n.lot_id; });
+      }
+      return wrap;
+    }
+
+    async function loadList(){
+      bellList.innerHTML = '<div class="bs-notif-empty">Загрузка...</div>';
+      try {
+        const r = await fetch('/api/notifications?limit=20');
+        if (!r.ok) { bellList.innerHTML = '<div class="bs-notif-empty">Ошибка</div>'; return; }
+        const data = await r.json();
+        setUnread(data.unread || 0);
+        bellList.innerHTML = '';
+        if (!data.notifications || data.notifications.length === 0) {
+          bellList.innerHTML = '<div class="bs-notif-empty">Уведомлений пока нет</div>';
+          return;
+        }
+        data.notifications.forEach(n => bellList.appendChild(renderNotifRow(n)));
+      } catch(e){
+        bellList.innerHTML = '<div class="bs-notif-empty">Ошибка сети</div>';
+      }
+    }
+
+    async function markRead(id){
+      // Всегда удаляем карточку локально, чтобы UI отвечал мгновенно даже при сетевой ошибке
+      const row = bellList ? bellList.querySelector('.bs-notif[data-id="' + id + '"]') : null;
+      if (row) row.classList.remove('bs-notif-unread');
+      const btn = row ? row.querySelector('.bs-notif-mark') : null;
+      if (btn) btn.remove();
+      const card = persistentStack ? persistentStack.querySelector('[data-notif-id="' + id + '"]') : null;
+      if (card) card.remove();
+      acked.add(Number(id));
+      persistAcked();
+      try {
+        const r = await fetch('/api/notifications/' + id + '/read', { method: 'POST' });
+        if (!r.ok) return;
+        const d = await r.json();
+        setUnread(d.unread || 0);
+      } catch(e){}
+    }
+
+    async function markAllRead(){
+      try {
+        const r = await fetch('/api/notifications/read-all', { method: 'POST' });
+        if (!r.ok) return;
+        setUnread(0);
+        bellList.querySelectorAll('.bs-notif').forEach(row => {
+          row.classList.remove('bs-notif-unread');
+          const btn = row.querySelector('.bs-notif-mark');
+          if (btn) btn.remove();
+          const id = Number(row.dataset.id);
+          if (id) { acked.add(id); }
+        });
+        persistAcked();
+        if (persistentStack) {
+          persistentStack.querySelectorAll('[data-notif-id]').forEach(c => c.remove());
+        }
+      } catch(e){}
+    }
+
+    if (bellBtn) {
+      bellBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const willOpen = !bellDropdown.classList.contains('is-open');
+        bellDropdown.classList.toggle('is-open', willOpen);
+        if (willOpen) loadList();
+      });
+      document.addEventListener('click', (e) => {
+        if (!bellDropdown.classList.contains('is-open')) return;
+        if (e.target.closest('#bs-bell-wrap')) return;
+        bellDropdown.classList.remove('is-open');
+      });
+    }
+    if (bellMarkAll) bellMarkAll.addEventListener('click', (e) => { e.stopPropagation(); markAllRead(); });
+
+    function pushPersistent(n){
+      if (!persistentStack) return;
+      if (acked.has(Number(n.id))) return;
+      if (persistentStack.querySelector('[data-notif-id="' + n.id + '"]')) return;
+      const card = document.createElement('div');
+      card.className = 'bs-toast-persistent';
+      card.dataset.notifId = String(n.id);
+      const t = document.createElement('div');
+      t.className = 'bs-toast-persistent-title';
+      t.textContent = n.title || 'Уведомление';
+      const b = document.createElement('div');
+      b.className = 'bs-toast-persistent-body';
+      b.textContent = n.body || '';
+      const actions = document.createElement('div');
+      actions.className = 'bs-toast-persistent-actions';
+      const lower = ((n.title || '') + ' ' + (n.body || '')).toLowerCase();
+      if (n.lot_id) {
+        const open = document.createElement('button');
+        open.type = 'button';
+        open.className = 'bs-toast-persistent-btn';
+        open.textContent = 'Открыть лот';
+        open.addEventListener('click', () => { window.location.href = '/lot/' + n.lot_id; });
+        actions.appendChild(open);
+      }
+      if (lower.includes('победили') || lower.includes('переходит к вам') || lower.includes('оплатите выигрыш')) {
+        const pay = document.createElement('button');
+        pay.type = 'button';
+        pay.className = 'bs-toast-persistent-btn';
+        pay.textContent = '💳 Оплатить';
+        pay.addEventListener('click', () => { window.location.href = '/me#payments'; });
+        actions.appendChild(pay);
+      }
+      if (lower.includes('покупатель оплатил') || lower.includes('отправьте билет')) {
+        const ship = document.createElement('button');
+        ship.type = 'button';
+        ship.className = 'bs-toast-persistent-btn';
+        ship.textContent = '🎫 Отправить билет';
+        ship.addEventListener('click', () => { window.location.href = '/sell#escrow'; });
+        actions.appendChild(ship);
+      }
+      // Кнопка «Я получил товар» — только когда продавец действительно отправил билет (по типу уведомления)
+      const isTicketDelivered = (n.kind === 'ticket_delivered') || (
+        lower.includes('продавец отправил билет') && !lower.includes('вы победили') && !lower.includes('вы выиграли') && !lower.includes('переходит к вам')
+      );
+      if (isTicketDelivered) {
+        const got = document.createElement('button');
+        got.type = 'button';
+        got.className = 'bs-toast-persistent-btn';
+        got.textContent = '✅ Я получил товар';
+        got.addEventListener('click', async () => {
+          if (!n.payment_id) { window.location.href = '/me#payments'; return; }
+          got.disabled = true;
+          got.textContent = '...';
+          try {
+            const r = await fetch('/api/payment/' + n.payment_id + '/confirm-delivery', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+            if (r.ok) {
+              markRead(n.id);
+              if (window.bidstageToast) window.bidstageToast('Получение подтверждено, продавцу зачислено', 'success');
+              setTimeout(() => window.location.reload(), 800);
+            } else {
+              const data = await r.json().catch(() => ({}));
+              got.disabled = false;
+              got.textContent = '✅ Я получил товар';
+              if (window.bidstageToast) window.bidstageToast(data.message || data.error || 'Не удалось подтвердить', 'error');
+            }
+          } catch (e) {
+            got.disabled = false;
+            got.textContent = '✅ Я получил товар';
+          }
+        });
+        actions.appendChild(got);
+      }
+      const ack = document.createElement('button');
+      ack.type = 'button';
+      ack.className = 'bs-toast-persistent-btn bs-toast-persistent-btn-secondary';
+      ack.textContent = 'Я прочитал';
+      ack.addEventListener('click', () => { markRead(n.id); });
+      actions.appendChild(ack);
+      card.appendChild(t);
+      card.appendChild(b);
+      card.appendChild(actions);
+      persistentStack.appendChild(card);
+    }
+
+    async function loadInitialPersistent(){
+      try {
+        const r = await fetch('/api/notifications?unread=1&limit=10');
+        if (!r.ok) return;
+        const d = await r.json();
+        setUnread(d.unread || 0);
+        (d.notifications || []).slice().reverse().forEach(n => pushPersistent(n));
+      } catch(e){}
+    }
+    loadInitialPersistent();
+    refreshChatUnread();
+
+    function attachSocketHandlers(){
+      if (!window.socket) return false;
+      window.socket.on('notification_new', (payload) => {
+        if (!payload) return;
+        const cur = Number((bellBadge && bellBadge.textContent) || 0) || 0;
+        setUnread(cur + 1);
+        pushPersistent(payload);
+        if (bellDropdown && bellDropdown.classList.contains('is-open')) loadList();
+      });
+      window.socket.on('chat_message', (payload) => {
+        if (!payload) return;
+        const onChats = location.pathname === '/chats';
+        if (Number(payload.recipient_id) === Number(ME_ID)) {
+          refreshChatUnread();
+          if (!onChats) {
+            const isBot = payload.sender_username === 'bidstage_support';
+            if (!isBot) {
+              if (window.bidstageToast) window.bidstageToast('Новое сообщение от ' + (payload.sender_username || ''), 'good');
+            }
+          }
+        }
+      });
+      return true;
+    }
+    if (!attachSocketHandlers()) {
+      let tries = 0;
+      const iv = setInterval(() => {
+        tries += 1;
+        if (attachSocketHandlers() || tries > 40) clearInterval(iv);
+      }, 250);
+    }
+
+    window.bidstageNotifications = { reload: loadList, markRead, markAllRead, pushPersistent };
+  })();
+  </script>
+  {% endif %}
+</body>
+</html>

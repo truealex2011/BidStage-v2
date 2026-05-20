@@ -1,0 +1,691 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<main class="relative mx-auto max-w-[1280px] px-6 py-10 lg:px-12">
+
+  {% if pending_payments %}
+  <section class="cyber-card mb-6 p-6 critical-pulse">
+    <div class="flex items-center gap-2">
+      <span class="pill pill-amber"><iconify-icon icon="lucide:bell-ring"></iconify-icon> <span data-i18n="profile.awaitsPayment">Ожидает оплаты</span></span>
+    </div>
+    <h2 class="heading mt-3 text-xl font-bold" data-i18n="profile.youWon">Вы выиграли · оплатите выигрыш</h2>
+    <p class="mt-1 text-sm text-muted" data-i18n="profile.notPaidNote">Если не оплатить до срока — лот перейдёт следующему биддеру.</p>
+    <div class="mt-5 space-y-3">
+      {% for p in pending_payments %}
+      <div class="rounded border p-5" style="border-color:rgba(240,165,0,0.3);background:rgba(240,165,0,0.05);" data-payment-id="{{ p.id }}">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div class="min-w-0 flex-1">
+            <a href="/lot/{{ p.lot_id }}" class="text-base font-bold hover:text-violet" data-translate>{{ p.lot_title }}</a>
+            <p class="mt-1 text-xs uppercase tracking-wide text-muted">До: {{ p.expires_at_display }} · провайдер: {{ p.provider }}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-3xl font-bold">${{ p.amount_usd }}</p>
+            <p class="text-xs uppercase tracking-wide text-muted">{{ p.currency }}</p>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <button type="button" class="btn btn-violet btn-sm" data-pay-card="{{ p.id }}">
+            <iconify-icon icon="lucide:credit-card" class="text-base"></iconify-icon>
+            <span data-i18n="profile.payCard">Оплатить картой</span>
+          </button>
+          <button type="button" class="btn btn-amber btn-sm" data-pay-balance="{{ p.id }}" data-amount="{{ p.amount_usd_raw }}">
+            <iconify-icon icon="lucide:wallet" class="text-base"></iconify-icon>
+            <span data-i18n="profile.payBalance">Списать с баланса</span>
+          </button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <div class="grid gap-6 lg:grid-cols-12">
+    <section class="cyber-card p-6 lg:col-span-7">
+      <div class="flex items-start gap-4">
+        <span class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#7c5cfc] to-[#f0a500] text-base font-bold">{{ user.username[:2]|upper }}</span>
+        <div class="min-w-0 flex-1">
+          <p class="text-sm font-bold uppercase tracking-wider text-violet" data-i18n="profile.profile">Профиль</p>
+          <h1 class="heading mt-1 truncate text-2xl font-bold">{{ user.username }}</h1>
+          <div class="mt-3 flex flex-wrap gap-2">
+            <span class="pill pill-muted"><iconify-icon icon="lucide:flag"></iconify-icon> {{ user.country }}</span>
+            <span class="pill pill-violet-soft">
+              {% if user.country == 'AM' %}IDram{% elif user.country == 'RU' %}YooKassa{% else %}Stripe{% endif %}
+            </span>
+            {% if user.email %}<span class="pill pill-muted"><iconify-icon icon="lucide:mail"></iconify-icon> {{ user.email }}</span>{% endif %}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="balance-tile lg:col-span-5">
+      <div class="flex items-center justify-between">
+        <p class="text-sm font-bold uppercase tracking-wider text-muted" data-i18n="profile.balance">Баланс</p>
+        <iconify-icon icon="lucide:wallet" class="text-xl text-violet"></iconify-icon>
+      </div>
+      <p id="balance-usd" class="mt-3 text-4xl font-bold" data-balance-display data-balance-usd="{{ balance }}">${{ '%.2f'|format(balance) }}</p>
+      <p class="mt-1 text-xs uppercase tracking-wide text-muted" data-i18n="profile.balanceNote">USD · конвертируется при оплате</p>
+      <div class="divider"></div>
+      <p class="field-label" data-i18n="profile.topup">Пополнение</p>
+      <div class="grid grid-cols-[1fr_140px] gap-2">
+        <input id="topup-amount" type="number" min="1" step="1" placeholder="Сумма" class="field">
+        <select id="topup-provider" class="field">
+          <option value="card" data-i18n="profile.providerCard">С карты</option>
+          <option value="demo" data-i18n="profile.providerDemo">Демо</option>
+          <option value="stripe">Stripe</option>
+          <option value="yookassa">YooKassa</option>
+          <option value="idram">IDram</option>
+        </select>
+      </div>
+      <p id="topup-equiv" class="mt-1 text-xs text-muted"></p>
+      <button type="button" id="topup-btn" class="btn btn-violet btn-block mt-3">
+        <iconify-icon icon="lucide:plus" class="text-base"></iconify-icon>
+        <span data-i18n="profile.topupBtn">Пополнить</span>
+      </button>
+      <p class="mt-2 text-xs text-muted" data-i18n="profile.topupHint">«С карты» спишет с карты по умолчанию мгновенно.</p>
+    </section>
+  </div>
+
+  <section class="cyber-card mt-6 p-6">
+    <div class="flex items-center gap-3 mb-4">
+      <iconify-icon icon="lucide:settings-2" class="text-xl text-violet"></iconify-icon>
+      <div>
+        <p class="text-sm font-bold uppercase tracking-wider text-violet" data-i18n="profile.settingsTitle">Настройки</p>
+        <h2 class="heading mt-1 text-xl font-bold" data-i18n="profile.settingsSubtitle">Валюта и язык интерфейса</h2>
+      </div>
+    </div>
+    <div class="grid gap-5 sm:grid-cols-2">
+      <div>
+        <p class="field-label" data-i18n="profile.currency">Валюта отображения</p>
+        <div class="seg w-full" style="display:flex;">
+          <button type="button" data-currency="AMD" class="currency-btn seg-btn flex-1">AMD ֏</button>
+          <button type="button" data-currency="RUB" class="currency-btn seg-btn flex-1">RUB ₽</button>
+          <button type="button" data-currency="USD" class="currency-btn seg-btn flex-1">USD $</button>
+        </div>
+        <p class="mt-2 text-xs text-muted" data-i18n="profile.currencyHint">Применится сразу на всём сайте.</p>
+      </div>
+      <div>
+        <p class="field-label" data-i18n="profile.language">Язык</p>
+        <div class="seg w-full" style="display:flex;">
+          <button type="button" data-lang="ru" class="lang-btn seg-btn flex-1">Русский</button>
+          <button type="button" data-lang="hy" class="lang-btn seg-btn flex-1">Հայերեն</button>
+          <button type="button" data-lang="en" class="lang-btn seg-btn flex-1">English</button>
+        </div>
+        <p class="mt-2 text-xs text-muted" data-i18n="profile.languageHint">Переводит интерфейс. Названия и описания лотов переводятся через сервис при загрузке страницы лота.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="cyber-card mt-6 p-6">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <p class="text-sm font-bold uppercase tracking-wider text-violet" data-i18n="profile.cards">Платёжные методы</p>
+        <h2 class="heading mt-1 text-xl font-bold" data-i18n="profile.cardsTitle">Карты</h2>
+        <p class="mt-1 text-xs text-muted" data-i18n="profile.cardsHint">При победе сумма списывается с карты по умолчанию.</p>
+      </div>
+      <button type="button" id="add-card-btn" class="btn btn-violet btn-sm">
+        <iconify-icon icon="lucide:plus" class="text-base"></iconify-icon>
+        <span data-i18n="profile.addCard">Привязать карту</span>
+      </button>
+    </div>
+    <div id="cards-list" class="mt-5 grid gap-3 sm:grid-cols-2">
+      {% for c in cards %}
+      <div class="payment-card-tile {% if c.is_default %}is-default{% endif %}" data-card-id="{{ c.id }}">
+        <div class="flex items-start justify-between">
+          <span class="card-brand {{ c.brand }}">{{ c.brand|upper }}</span>
+          {% if c.is_default %}<span class="pill pill-violet-soft">по умолчанию</span>{% endif %}
+        </div>
+        <p class="mt-5 font-mono text-base font-semibold tracking-wide">•••• •••• •••• {{ c.last4 }}</p>
+        <div class="mt-3 flex items-center justify-between text-xs text-muted">
+          <span>{{ '%02d'|format(c.exp_month) }}/{{ c.exp_year }}</span>
+          <span class="uppercase tracking-wider">{{ c.provider }}</span>
+        </div>
+        <div class="mt-4 flex gap-2">
+          {% if not c.is_default %}
+          <button type="button" class="btn btn-ghost btn-sm flex-1" data-make-default="{{ c.id }}">Сделать главной</button>
+          {% endif %}
+          <button type="button" class="btn btn-danger btn-sm" data-delete-card="{{ c.id }}" title="Удалить">
+            <iconify-icon icon="lucide:trash-2" class="text-base"></iconify-icon>
+          </button>
+        </div>
+      </div>
+      {% else %}
+      <div class="col-span-full rounded border border-dashed border-white/10 p-10 text-center">
+        <iconify-icon icon="lucide:credit-card" class="text-3xl text-muted"></iconify-icon>
+        <p class="mt-3 text-sm text-muted">Нет привязанных карт.</p>
+        <p class="mt-1 text-xs text-muted">Привяжите карту, чтобы оплата победы списывалась мгновенно.</p>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <div class="mt-6 grid gap-6 lg:grid-cols-3">
+    <section class="cyber-card p-6">
+      <p class="text-sm font-bold uppercase tracking-wider text-violet" data-i18n="profile.activity">Активность</p>
+      <h2 class="heading mt-1 text-xl font-bold" data-i18n="profile.myBids">Мои ставки</h2>
+      <div class="mt-4 space-y-2">
+        {% for b in my_bids %}
+        <a href="/lot/{{ b.lot_id }}" class="flex items-center justify-between gap-4 rounded border border-white/[0.06] bg-white/[0.02] px-4 py-3 transition hover:border-violet hover:bg-white/[0.04]">
+          <div class="min-w-0">
+            <p class="truncate text-sm font-semibold" data-translate>{{ b.lot_title }}</p>
+            <p class="text-xs uppercase tracking-wide text-muted">{{ b.created_at_display }} · {{ b.lot_status }}</p>
+          </div>
+          <div class="flex-shrink-0 text-right">
+            <span class="font-mono text-base font-bold">${{ b.amount_usd }}</span>
+            <p class="text-xs {% if b.verified %}text-success{% else %}text-amber{% endif %}">
+              {% if b.verified %}подтверждена{% else %}ожидает{% endif %}
+            </p>
+          </div>
+        </a>
+        {% else %}
+        <p class="text-sm text-muted">Пока нет ставок. <a href="/" class="text-violet hover:underline">Перейти в каталог</a></p>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="cyber-card p-6">
+      <p class="text-sm font-bold uppercase tracking-wider text-violet" data-i18n="profile.favorites">Избранное</p>
+      <h2 class="heading mt-1 text-xl font-bold" data-i18n="profile.watchlist">Слежу за лотами</h2>
+      <div class="mt-4 space-y-2">
+        {% for w in watchlist %}
+        <a href="/lot/{{ w.id }}" class="flex items-center justify-between gap-3 rounded border border-white/[0.06] bg-white/[0.02] px-4 py-3 transition hover:border-amber hover:bg-white/[0.04]">
+          <div class="min-w-0">
+            <p class="truncate text-sm font-semibold" data-translate>{{ w.title }}</p>
+            <p class="text-xs text-muted" data-translate>{{ w.artist }}</p>
+          </div>
+          <div class="flex-shrink-0 text-right">
+            <p class="text-sm font-bold">${{ w.current_price_usd }}</p>
+            <p class="text-xs text-muted">{{ w.end_time_display }}</p>
+          </div>
+        </a>
+        {% else %}
+        <p class="text-sm text-muted">Нет отслеживаемых лотов. Нажмите «Следить» на странице лота.</p>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="cyber-card p-6">
+      <p class="text-sm font-bold uppercase tracking-wider text-violet" data-i18n="profile.escrow">Эскроу и платежи</p>
+      <h2 class="heading mt-1 text-xl font-bold" data-i18n="profile.history">История покупок</h2>
+      <p class="mt-1 text-xs text-muted" data-i18n="profile.escrowHint">Деньги хранятся в эскроу до подтверждения получения билета.</p>
+      <div class="mt-4 space-y-2">
+        {% for p in all_payments %}
+        <div class="rounded border border-white/[0.06] bg-white/[0.02] px-4 py-3">
+          <div class="flex items-center justify-between gap-4">
+            <div class="min-w-0">
+              <a href="/lot/{{ p.lot_id }}" class="truncate text-sm font-semibold hover:text-violet" data-translate>{{ p.lot_title }}</a>
+              <p class="text-xs uppercase tracking-wide text-muted">{{ p.created_at_display }} · {{ p.provider }}</p>
+            </div>
+            <div class="flex-shrink-0 text-right">
+              <span class="font-mono text-base font-bold">${{ p.amount_usd }}</span>
+              {% if p.status == 'paid' and p.held_in_escrow and not p.buyer_confirmed %}
+              <span class="ml-2 pill pill-amber-soft">🔒 в эскроу</span>
+              {% elif p.status == 'paid' and p.buyer_confirmed %}
+              <span class="ml-2 pill pill-success">✓ получено</span>
+              {% else %}
+              <span class="ml-2 pill {% if p.status == 'paid' %}pill-success{% elif p.status == 'failed' %}pill-danger{% elif p.status == 'expired' %}pill-muted{% else %}pill-amber-soft{% endif %}">{{ p.status }}</span>
+              {% endif %}
+            </div>
+          </div>
+
+          {% if p.status == 'paid' and p.held_in_escrow and not p.buyer_confirmed %}
+          <div class="mt-3 pt-3 border-t border-white/[0.06]">
+            {% if p.ticket_code %}
+            <p class="text-xs text-success mb-2">🎫 Продавец прислал билет:</p>
+            <p class="font-mono text-sm bg-white/[0.04] rounded px-3 py-2 break-all">{{ p.ticket_code }}</p>
+            <button type="button" class="btn btn-success btn-block mt-2" data-confirm-delivery="{{ p.id }}">
+              <iconify-icon icon="lucide:check-check"></iconify-icon>
+              Подтвердить получение и освободить деньги
+            </button>
+            {% else %}
+            <p class="text-xs text-amber">⏳ Ожидаем когда продавец отправит билет. Деньги защищены.</p>
+            {% endif %}
+          </div>
+          {% elif p.status == 'paid' and p.buyer_confirmed and p.ticket_code %}
+          <div class="mt-3 pt-3 border-t border-white/[0.06]">
+            <p class="text-xs text-success mb-2">🎫 Ваш билет:</p>
+            <p class="font-mono text-sm bg-white/[0.04] rounded px-3 py-2 break-all">{{ p.ticket_code }}</p>
+          </div>
+          {% endif %}
+        </div>
+        {% else %}
+        <p class="text-sm text-muted">Платежей ещё не было.</p>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+</main>
+
+<div id="add-card-modal" class="modal-overlay">
+  <div class="cyber-card modal-card">
+    <button type="button" id="add-card-close" class="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded text-muted hover:text-white">
+      <iconify-icon icon="lucide:x" class="text-xl"></iconify-icon>
+    </button>
+
+    <span class="pill pill-violet-soft">Платёж</span>
+    <h2 class="heading mt-3 text-2xl font-bold">Привязать карту</h2>
+    <p class="mt-1 text-xs uppercase tracking-wide text-muted">Защищённый ввод реквизитов</p>
+
+    <div class="payment-card-tile mt-5">
+      <div class="flex items-center justify-between">
+        <span id="card-preview-brand" class="card-brand">CARD</span>
+        <iconify-icon icon="lucide:wifi" class="text-lg text-white/40 rotate-90"></iconify-icon>
+      </div>
+      <p id="card-preview-number" class="mt-5 font-mono text-base font-semibold tracking-wide">•••• •••• •••• ••••</p>
+      <div class="mt-3 flex items-center justify-between text-xs">
+        <p id="card-preview-holder" class="text-muted">ИМЯ ВЛАДЕЛЬЦА</p>
+        <p id="card-preview-exp" class="font-mono text-muted">MM / YY</p>
+      </div>
+    </div>
+
+    <label class="field-label mt-5">Номер карты</label>
+    <input id="card-number" type="text" inputmode="numeric" autocomplete="cc-number" placeholder="4242 4242 4242 4242" class="field font-mono">
+
+    <label class="field-label mt-3">Имя владельца</label>
+    <input id="card-holder" type="text" autocomplete="cc-name" placeholder="IVAN IVANOV" class="field">
+
+    <div class="mt-3 grid grid-cols-2 gap-3">
+      <div>
+        <label class="field-label">Срок действия</label>
+        <input id="card-expiry" type="text" inputmode="numeric" placeholder="MM/YY" maxlength="5" class="field font-mono">
+      </div>
+      <div>
+        <label class="field-label">CVC</label>
+        <input id="card-cvc" type="text" inputmode="numeric" placeholder="123" maxlength="4" class="field font-mono">
+      </div>
+    </div>
+
+    <p id="card-error" class="mt-3 hidden text-sm font-bold uppercase tracking-wide" style="color:var(--danger);"></p>
+
+    <button type="button" id="card-submit" class="btn btn-violet btn-block mt-5">
+      <iconify-icon icon="lucide:lock" class="text-base"></iconify-icon>
+      Привязать
+    </button>
+    <p class="mt-3 text-xs text-muted">Данные карты передаются по защищённому каналу. Хранятся только последние 4 цифры и срок действия.</p>
+  </div>
+</div>
+
+<script>
+(function () {
+  function updateTopupCurrencyHint() {
+    const amt = document.getElementById('topup-amount');
+    const eq = document.getElementById('topup-equiv');
+    if (!amt) return;
+    const cur = (window.currentCurrency || localStorage.getItem('bs.currency') || 'USD');
+    const symbols = { AMD: 'AMD', RUB: '₽', USD: '$' };
+    amt.placeholder = 'Сумма ' + (symbols[cur] || cur);
+    if (!eq) return;
+    const raw = Number(amt.value || 0);
+    if (!raw || raw <= 0) { eq.textContent = ''; return; }
+    const fx = (window.bidstageRates || {});
+    let usd = raw;
+    if (cur === 'AMD' && fx.AMD) usd = raw / fx.AMD;
+    else if (cur === 'RUB' && fx.RUB) usd = raw / fx.RUB;
+    if (cur === 'USD') {
+      eq.textContent = '';
+    } else {
+      eq.textContent = '≈ $' + usd.toFixed(2) + ' будет зачислено на баланс';
+    }
+  }
+  function bindTopupCurrencyHint() {
+    updateTopupCurrencyHint();
+    const amt = document.getElementById('topup-amount');
+    if (amt && !amt.dataset.hintBound) {
+      amt.dataset.hintBound = '1';
+      amt.addEventListener('input', updateTopupCurrencyHint);
+    }
+    document.querySelectorAll('.currency-btn').forEach((b) => {
+      if (b.dataset.hintBound) return;
+      b.dataset.hintBound = '1';
+      b.addEventListener('click', () => setTimeout(updateTopupCurrencyHint, 60));
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bindTopupCurrencyHint);
+  } else {
+    bindTopupCurrencyHint();
+  }
+  window.bidstageUpdateTopupHint = updateTopupCurrencyHint;
+  const modal = document.getElementById('add-card-modal');
+  const numberEl = document.getElementById('card-number');
+  const holderEl = document.getElementById('card-holder');
+  const expiryEl = document.getElementById('card-expiry');
+  const cvcEl = document.getElementById('card-cvc');
+  const previewNumber = document.getElementById('card-preview-number');
+  const previewHolder = document.getElementById('card-preview-holder');
+  const previewExp = document.getElementById('card-preview-exp');
+  const previewBrand = document.getElementById('card-preview-brand');
+  const errEl = document.getElementById('card-error');
+
+  function detectBrand(num) {
+    const n = num.replace(/\D/g, '');
+    if (n.startsWith('4')) return ['visa', 'VISA'];
+    if (/^(5[1-5]|2[2-7])/.test(n)) return ['mc', 'MC'];
+    if (/^3[47]/.test(n)) return ['amex', 'AMEX'];
+    if (/^220[0-4]/.test(n)) return ['mir', 'MIR'];
+    return ['', 'CARD'];
+  }
+  function formatNumber(value) {
+    const digits = value.replace(/\D/g, '').slice(0, 19);
+    return digits.replace(/(.{4})/g, '$1 ').trim();
+  }
+  function formatExpiry(value) {
+    const digits = value.replace(/\D/g, '').slice(0, 4);
+    return digits.length <= 2 ? digits : digits.slice(0, 2) + '/' + digits.slice(2);
+  }
+  numberEl.addEventListener('input', () => {
+    numberEl.value = formatNumber(numberEl.value);
+    previewNumber.textContent = numberEl.value || '•••• •••• •••• ••••';
+    const [cls, label] = detectBrand(numberEl.value);
+    previewBrand.className = 'card-brand ' + cls;
+    previewBrand.textContent = label;
+  });
+  holderEl.addEventListener('input', () => {
+    previewHolder.textContent = (holderEl.value || 'ИМЯ ВЛАДЕЛЬЦА').toUpperCase();
+  });
+  expiryEl.addEventListener('input', () => {
+    expiryEl.value = formatExpiry(expiryEl.value);
+    previewExp.textContent = expiryEl.value || 'MM / YY';
+  });
+  cvcEl.addEventListener('input', () => {
+    cvcEl.value = cvcEl.value.replace(/\D/g, '').slice(0, 4);
+  });
+
+  function showError(msg) { errEl.textContent = msg; errEl.classList.remove('hidden'); }
+  function hideError() { errEl.classList.add('hidden'); }
+  function openModal() { modal.classList.add('is-open'); hideError(); }
+  function closeModal() { modal.classList.remove('is-open'); }
+
+  document.getElementById('add-card-btn').addEventListener('click', openModal);
+  document.getElementById('add-card-close').addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+  document.getElementById('card-submit').addEventListener('click', async () => {
+    hideError();
+    const number = numberEl.value.replace(/\s/g, '');
+    const holder = holderEl.value.trim();
+    const expiry = expiryEl.value.trim();
+    const cvc = cvcEl.value.trim();
+    if (number.length < 12) return showError('Введите номер карты (минимум 12 цифр)');
+    function luhn(n) {
+      let s = 0, alt = false;
+      for (let i = n.length - 1; i >= 0; i--) {
+        let d = parseInt(n[i], 10);
+        if (alt) { d *= 2; if (d > 9) d -= 9; }
+        s += d; alt = !alt;
+      }
+      return s % 10 === 0;
+    }
+    if (!luhn(number)) return showError('Номер карты не прошёл проверку — возможно опечатка');
+    if (!holder) return showError('Введите имя владельца');
+    if (!expiry.includes('/')) return showError('Срок в формате MM/YY');
+    const [mm, yy] = expiry.split('/');
+    const expYear = 2000 + parseInt(yy || '0', 10);
+    const expMonth = parseInt(mm || '0', 10);
+    const now = new Date();
+    if (expMonth < 1 || expMonth > 12 || expYear < now.getFullYear() || (expYear === now.getFullYear() && expMonth < now.getMonth() + 1)) {
+      return showError('Срок действия карты истёк или неверен');
+    }
+    if (cvc.length < 3) return showError('Введите CVC (3-4 цифры)');
+    const btn = document.getElementById('card-submit');
+    btn.disabled = true;
+    try {
+      const resp = await fetch('/api/cards', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ number, holder, expiry, cvc })
+      });
+      const data = await resp.json().catch(() => ({}));
+      const cardErrorMap = {
+        invalid_number: 'Неверный номер карты — проверьте цифры',
+        invalid_number_checksum: 'Номер карты не прошёл проверку — возможно опечатка',
+        invalid_holder: 'Введите имя владельца (минимум 2 символа)',
+        invalid_expiry: 'Неверный срок действия — формат MM/YY',
+        card_expired: 'Срок действия карты истёк',
+        invalid_cvc: 'Неверный CVC-код',
+        duplicate_card: 'Эта карта уже привязана',
+        unauthorized: 'Войдите в систему',
+      };
+      if (!resp.ok) { showError(cardErrorMap[data.error] || ('Не удалось привязать: ' + (data.error || resp.status))); return; }
+      window.location.reload();
+    } catch (e) { showError('Сетевая ошибка'); }
+    finally { btn.disabled = false; }
+  });
+
+  function inlineToast(msg, kind) {
+    const node = document.createElement('div');
+    const cls = kind === 'good' ? 'toast-good' : kind === 'warn' ? 'toast-warn' : 'toast-bad';
+    node.className = 'toast ' + cls + ' fixed right-6 z-[200] max-w-sm';
+    node.style.bottom = (24 + document.querySelectorAll('[data-toast]').length * 64) + 'px';
+    node.dataset.toast = '1';
+    node.textContent = msg;
+    document.body.appendChild(node);
+    setTimeout(() => { node.style.opacity = '0'; node.style.transition = 'opacity 0.4s'; }, 4000);
+    setTimeout(() => { node.remove(); }, 4500);
+  }
+
+  document.querySelectorAll('[data-delete-card]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const armed = btn.getAttribute('data-armed') === '1';
+      if (!armed) {
+        btn.setAttribute('data-armed', '1');
+        const orig = btn.innerHTML;
+        btn.dataset.original = orig;
+        btn.innerHTML = '<iconify-icon icon="lucide:alert-triangle"></iconify-icon>';
+        btn.title = 'Нажмите ещё раз для удаления';
+        setTimeout(() => {
+          if (btn.getAttribute('data-armed') === '1') {
+            btn.removeAttribute('data-armed');
+            btn.innerHTML = btn.dataset.original;
+            btn.title = '';
+          }
+        }, 3500);
+        return;
+      }
+      const resp = await fetch('/api/cards/' + btn.getAttribute('data-delete-card'), { method: 'DELETE' });
+      if (resp.ok) window.location.reload();
+      else inlineToast('Не удалось удалить карту', 'bad');
+    });
+  });
+
+  document.querySelectorAll('[data-make-default]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<iconify-icon icon="lucide:loader-2"></iconify-icon>';
+      const resp = await fetch('/api/cards/' + btn.getAttribute('data-make-default') + '/default', { method: 'POST' });
+      if (resp.ok) window.location.reload();
+      else { inlineToast('Не удалось обновить', 'bad'); btn.disabled = false; btn.innerHTML = orig; }
+    });
+  });
+
+  document.getElementById('topup-btn').addEventListener('click', async () => {
+    const rawAmount = Number(document.getElementById('topup-amount').value || 0);
+    const provider = document.getElementById('topup-provider').value;
+    const btn = document.getElementById('topup-btn');
+    const showInline = (msg, kind) => {
+      let el = document.getElementById('topup-status');
+      if (!el) {
+        el = document.createElement('p');
+        el.id = 'topup-status';
+        el.className = 'mt-2 text-xs font-semibold';
+        btn.parentNode.insertBefore(el, btn.nextSibling);
+      }
+      el.textContent = msg;
+      el.style.color = kind === 'good' ? 'var(--success)' : kind === 'warn' ? 'var(--secondary)' : 'var(--danger)';
+      setTimeout(() => { if (el) el.textContent = ''; }, 5000);
+    };
+    if (!rawAmount || rawAmount <= 0) {
+      showInline('Введите сумму больше нуля', 'bad');
+      return;
+    }
+    let amountUsd = rawAmount;
+    const cur = (window.currentCurrency || localStorage.getItem('bs.currency') || 'USD');
+    const fxRates = (window.bidstageRates || {});
+    if (cur === 'AMD' && fxRates.AMD) amountUsd = rawAmount / fxRates.AMD;
+    else if (cur === 'RUB' && fxRates.RUB) amountUsd = rawAmount / fxRates.RUB;
+    if (amountUsd < 0.01) {
+      showInline('Сумма должна быть больше 0', 'bad');
+      return;
+    }
+    if (amountUsd > 1000000) {
+      const fxFor = cur === 'AMD' ? (fxRates.AMD || 390) : cur === 'RUB' ? (fxRates.RUB || 90) : 1;
+      showInline('Максимум $1 000 000 (≈ ' + (1000000 * fxFor).toLocaleString('ru-RU') + ' ' + cur + ')', 'bad');
+      return;
+    }
+    btn.disabled = true;
+    const oldHtml = btn.innerHTML;
+    btn.innerHTML = '<iconify-icon icon="lucide:loader-2"></iconify-icon> Зачисление...';
+    try {
+      const resp = await fetch('/api/balance/topup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount_usd: Number(amountUsd.toFixed(2)), provider }),
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        if (data.error === 'no_default_card') {
+          showInline('Сначала привяжите карту ниже', 'warn');
+          document.getElementById('add-card-btn').click();
+        } else if (data.error === 'provider_not_configured') {
+          showInline(data.message || 'Провайдер не настроен на сервере', 'warn');
+        } else if (data.error === 'invalid_amount') {
+          showInline(data.message || 'Неверная сумма', 'bad');
+        } else {
+          showInline(data.message || 'Ошибка: ' + (data.error || resp.status), 'bad');
+        }
+        btn.disabled = false;
+        btn.innerHTML = oldHtml;
+        return;
+      }
+      if (data.status === 'pending') {
+        showInline(data.message || 'Ожидаем подтверждения от провайдера', 'warn');
+        btn.disabled = false;
+        btn.innerHTML = oldHtml;
+      } else {
+        showInline(data.message || 'Готово, баланс обновлён', 'good');
+        setTimeout(() => window.location.reload(), 700);
+      }
+    } catch (e) {
+      showInline('Сетевая ошибка', 'bad');
+      btn.disabled = false;
+      btn.innerHTML = oldHtml;
+    }
+  });
+
+  document.querySelectorAll('[data-pay-card]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-pay-card');
+      btn.disabled = true;
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<iconify-icon icon="lucide:loader-2"></iconify-icon> Оплата...';
+      try {
+        const resp = await fetch('/api/payments/' + id + '/pay-with-card', { method: 'POST' });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+          if (data.error === 'no_default_card') {
+            inlineToast('Карта не привязана. Откройте форму ниже.', 'warn');
+            document.getElementById('add-card-btn').click();
+          } else {
+            inlineToast(data.message || ('Ошибка: ' + (data.error || resp.status)), 'bad');
+          }
+          btn.disabled = false; btn.innerHTML = orig;
+          return;
+        }
+        const card = data.card || {};
+        inlineToast('Оплачено картой ' + (card.brand || '') + ' ····' + (card.last4 || '') + '. Билет: ' + (data.ticket_code || ''), 'good');
+        setTimeout(() => window.location.reload(), 900);
+      } catch (e) {
+        inlineToast('Сетевая ошибка', 'bad');
+        btn.disabled = false; btn.innerHTML = orig;
+      }
+    });
+  });
+
+  document.querySelectorAll('[data-pay-balance]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-pay-balance');
+      const armed = btn.getAttribute('data-armed') === '1';
+      if (!armed) {
+        btn.setAttribute('data-armed', '1');
+        btn.dataset.original = btn.innerHTML;
+        btn.classList.remove('btn-amber');
+        btn.classList.add('btn-danger');
+        btn.innerHTML = '<iconify-icon icon="lucide:alert-triangle"></iconify-icon> Нажмите ещё раз для списания';
+        setTimeout(() => {
+          if (btn.getAttribute('data-armed') === '1') {
+            btn.removeAttribute('data-armed');
+            btn.innerHTML = btn.dataset.original;
+            btn.classList.remove('btn-danger');
+            btn.classList.add('btn-amber');
+          }
+        }, 3500);
+        return;
+      }
+      btn.disabled = true;
+      btn.innerHTML = '<iconify-icon icon="lucide:loader-2"></iconify-icon> Списание...';
+      try {
+        const resp = await fetch('/api/payments/' + id + '/pay-with-balance', { method: 'POST' });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+          if (data.error === 'insufficient_balance') {
+            inlineToast('Недостаточно. Нужно $' + Number(data.amount_usd).toFixed(2) + ', доступно $' + Number(data.balance_usd).toFixed(2), 'bad');
+          } else {
+            inlineToast(data.message || ('Ошибка: ' + (data.error || resp.status)), 'bad');
+          }
+          btn.disabled = false; btn.innerHTML = btn.dataset.original; btn.removeAttribute('data-armed');
+          btn.classList.remove('btn-danger'); btn.classList.add('btn-amber');
+          return;
+        }
+        inlineToast('Оплачено. Новый баланс $' + Number(data.balance_usd).toFixed(2) + ' · Билет: ' + (data.ticket_code || ''), 'good');
+        setTimeout(() => window.location.reload(), 900);
+      } catch (e) {
+        inlineToast('Сетевая ошибка', 'bad');
+        btn.disabled = false; btn.innerHTML = btn.dataset.original; btn.removeAttribute('data-armed');
+      }
+    });
+  });
+
+  document.querySelectorAll('[data-confirm-delivery]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-confirm-delivery');
+      const confirmed = btn.getAttribute('data-armed') === '1';
+      if (!confirmed) {
+        btn.setAttribute('data-armed', '1');
+        const original = btn.innerHTML;
+        btn.dataset.original = original;
+        btn.classList.add('btn-amber');
+        btn.classList.remove('btn-success');
+        btn.innerHTML = '<iconify-icon icon="lucide:alert-triangle"></iconify-icon> Нажмите ещё раз для подтверждения';
+        setTimeout(() => {
+          if (btn.getAttribute('data-armed') === '1') {
+            btn.removeAttribute('data-armed');
+            btn.innerHTML = btn.dataset.original;
+            btn.classList.remove('btn-amber');
+            btn.classList.add('btn-success');
+          }
+        }, 4000);
+        return;
+      }
+      btn.disabled = true;
+      btn.innerHTML = '<iconify-icon icon="lucide:loader-2"></iconify-icon> Освобождаем эскроу...';
+      try {
+        const resp = await fetch('/api/payment/' + id + '/confirm-delivery', { method: 'POST' });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+          btn.disabled = false;
+          btn.innerHTML = data.reason || data.error || 'Ошибка';
+          setTimeout(() => { btn.innerHTML = btn.dataset.original; btn.removeAttribute('data-armed'); }, 3500);
+          return;
+        }
+        btn.innerHTML = '<iconify-icon icon="lucide:check-circle-2"></iconify-icon> Готово, деньги переведены';
+        setTimeout(() => window.location.reload(), 800);
+      } catch (e) {
+        btn.disabled = false;
+        btn.innerHTML = 'Сетевая ошибка';
+        setTimeout(() => { btn.innerHTML = btn.dataset.original; btn.removeAttribute('data-armed'); }, 3500);
+      }
+    });
+  });
+})();
+</script>
+{% endblock %}

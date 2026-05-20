@@ -1,0 +1,398 @@
+{% extends "base.html" %}
+{% block content %}
+<main class="bs-messenger" data-current-user-id="{{ me.id if me else '' }}">
+  <aside class="bs-messenger-sidebar">
+    <div class="bs-messenger-header">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-wider text-violet">💬 Сообщения</p>
+        <h1 class="heading mt-0.5 text-lg font-bold">Чаты</h1>
+      </div>
+      <span class="pill pill-muted">{{ chats|length }}</span>
+    </div>
+    <div class="bs-messenger-search">
+      <iconify-icon icon="lucide:search" class="text-base text-muted"></iconify-icon>
+      <input type="text" id="chat-filter" placeholder="Поиск по имени или лоту..." class="bs-messenger-search-input">
+    </div>
+    <div class="bs-messenger-list" id="chats-list">
+      {% for c in chats %}
+      <div class="bs-chat-row {% if c.is_bot %}bs-chat-row-bot{% endif %}" data-chat-key="{{ c.lot_id }}-{{ c.peer_id }}" data-lot-id="{{ c.lot_id }}" data-peer-id="{{ c.peer_id }}" data-peer-username="{{ c.peer_username }}" data-lot-title="{{ c.lot_title }}" data-is-bot="{{ '1' if c.is_bot else '0' }}" data-search="{{ c.peer_username|lower }} {{ c.lot_title|lower }}">
+        <div class="bs-chat-avatar-wrap">
+          {% if c.is_bot %}
+          <div class="bs-chat-avatar-fallback bs-chat-avatar-bot" title="Служба BidStage">🤖</div>
+          {% elif c.lot_image_url %}
+          <img src="{{ c.lot_image_url }}" alt="" class="bs-chat-avatar" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+          <div class="bs-chat-avatar-fallback" style="display:none;">{{ c.peer_username[:2]|upper }}</div>
+          {% else %}
+          <div class="bs-chat-avatar-fallback">{{ c.peer_username[:2]|upper }}</div>
+          {% endif %}
+          {% if c.unread > 0 %}
+          <span class="bs-chat-unread">{{ c.unread }}</span>
+          {% endif %}
+        </div>
+        <div class="bs-chat-meta">
+          <div class="bs-chat-row-top">
+            <p class="bs-chat-name">{{ c.peer_username }}{% if c.is_bot %} <span class="bs-chat-bot-tag">бот</span>{% endif %}</p>
+            <span class="bs-chat-time">{{ c.last_at_display }}</span>
+          </div>
+          <p class="bs-chat-lot truncate" data-translate>{{ c.lot_title }}</p>
+          <p class="bs-chat-preview {% if c.unread > 0 %}bs-chat-preview-unread{% endif %}">{{ c.last_message }}</p>
+        </div>
+      </div>
+      {% else %}
+      <div class="bs-chat-empty">
+        <iconify-icon icon="lucide:message-circle-off" class="text-3xl text-muted"></iconify-icon>
+        <p class="mt-3 text-sm text-muted">Сообщений пока нет</p>
+        <a href="/" class="btn btn-violet btn-sm mt-3">К аукционам</a>
+      </div>
+      {% endfor %}
+    </div>
+  </aside>
+
+  <section class="bs-messenger-main" id="messenger-main">
+    <div class="bs-messenger-empty" id="messenger-empty">
+      <iconify-icon icon="lucide:messages-square" class="text-5xl text-muted"></iconify-icon>
+      <p class="mt-4 text-base font-bold">Выберите чат</p>
+      <p class="mt-1 text-sm text-muted">Чтобы начать переписку, выберите диалог слева</p>
+    </div>
+
+    <div class="bs-messenger-active hidden" id="messenger-active">
+      <header class="bs-messenger-active-header">
+        <div class="flex items-center gap-3 min-w-0">
+          <button type="button" class="bs-messenger-back btn btn-ghost btn-sm" id="chat-back-btn" aria-label="Назад">
+            <iconify-icon icon="lucide:arrow-left" class="text-base"></iconify-icon>
+          </button>
+          <div class="bs-chat-avatar-fallback" id="active-avatar" style="width:42px;height:42px;font-size:0.85rem;">??</div>
+          <div class="min-w-0">
+            <p class="text-sm font-bold truncate" id="active-peer-name">—</p>
+            <a href="#" id="active-lot-link" class="text-xs text-muted hover:text-violet transition-colors truncate block" data-translate>—</a>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <a href="#" id="active-lot-open" class="btn btn-ghost btn-sm" title="Открыть лот">
+            <iconify-icon icon="lucide:external-link" class="text-base"></iconify-icon>
+          </a>
+        </div>
+      </header>
+
+      <div class="bs-messenger-messages" id="messenger-messages">
+        <p class="text-sm text-muted text-center py-6">Загрузка...</p>
+      </div>
+
+      <form class="bs-messenger-form" id="messenger-form">
+        <input type="text" class="bs-messenger-input" id="messenger-input" placeholder="Напишите сообщение..." maxlength="2000" autocomplete="off">
+        <button type="submit" class="btn btn-violet btn-sm">
+          <iconify-icon icon="lucide:send"></iconify-icon>
+        </button>
+      </form>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  const ME_ID = {% if me %}{{ me.id }}{% else %}null{% endif %};
+  const list = document.getElementById('chats-list');
+  const filter = document.getElementById('chat-filter');
+  const empty = document.getElementById('messenger-empty');
+  const active = document.getElementById('messenger-active');
+  const messages = document.getElementById('messenger-messages');
+  const form = document.getElementById('messenger-form');
+  const input = document.getElementById('messenger-input');
+  const peerName = document.getElementById('active-peer-name');
+  const lotLink = document.getElementById('active-lot-link');
+  const lotOpen = document.getElementById('active-lot-open');
+  const avatar = document.getElementById('active-avatar');
+  const backBtn = document.getElementById('chat-back-btn');
+  const BOT_USER_ID = {{ bot_user_id|default('null') }};
+  let activeLotId = null;
+  let activePeerId = null;
+
+  function escapeHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s == null ? '' : String(s);
+    return d.innerHTML;
+  }
+
+  if (filter) {
+    filter.addEventListener('input', () => {
+      const q = filter.value.trim().toLowerCase();
+      list.querySelectorAll('.bs-chat-row').forEach(row => {
+        const text = row.dataset.search || '';
+        row.style.display = (!q || text.indexOf(q) !== -1) ? '' : 'none';
+      });
+    });
+  }
+
+  function selectChat(row) {
+    if (!row) return;
+    list.querySelectorAll('.bs-chat-row').forEach(r => r.classList.remove('is-active'));
+    row.classList.add('is-active');
+    activeLotId = Number(row.dataset.lotId);
+    activePeerId = Number(row.dataset.peerId);
+    const username = row.dataset.peerUsername || '';
+    const title = row.dataset.lotTitle || '';
+    if (peerName) peerName.textContent = username;
+    if (lotLink) { lotLink.textContent = title; lotLink.href = '/lot/' + activeLotId; }
+    if (lotOpen) lotOpen.href = '/lot/' + activeLotId;
+    if (avatar) avatar.textContent = username.slice(0, 2).toUpperCase();
+    if (empty) empty.classList.add('hidden');
+    if (active) active.classList.remove('hidden');
+    document.body.classList.add('bs-messenger-active-mobile');
+    const isBot = BOT_USER_ID !== null && Number(activePeerId) === Number(BOT_USER_ID);
+    if (form) {
+      if (isBot) {
+        form.style.opacity = '0.5';
+        form.style.pointerEvents = 'none';
+        if (input) input.placeholder = 'Это служебный чат, отвечать нельзя';
+      } else {
+        form.style.opacity = '';
+        form.style.pointerEvents = '';
+        if (input) input.placeholder = 'Напишите сообщение...';
+      }
+    }
+    loadMessages();
+    const unread = row.querySelector('.bs-chat-unread');
+    if (unread) unread.remove();
+    if (window.bidstageNotifications && window.bidstageNotifications.refreshChatUnread) {
+      window.bidstageNotifications.refreshChatUnread();
+    }
+    fetch('/api/chat/unread').then(r => r.json()).then(d => {
+      const navBadge = document.getElementById('bs-nav-chat-badge');
+      if (!navBadge) return;
+      const n = (d && d.unread) || 0;
+      if (n <= 0) { navBadge.style.display = 'none'; navBadge.textContent = '0'; }
+      else { navBadge.style.display = ''; navBadge.textContent = String(n > 99 ? '99+' : n); }
+    }).catch(() => {});
+  }
+
+  function renderMessage(m) {
+    const mine = ME_ID !== null && Number(m.sender_id) === Number(ME_ID);
+    const fromBot = BOT_USER_ID !== null && Number(m.sender_id) === Number(BOT_USER_ID);
+    const wrapper = document.createElement('div');
+    wrapper.className = 'bs-msg ' + (mine ? 'bs-msg-mine' : 'bs-msg-theirs');
+    const bubble = document.createElement('div');
+    bubble.className = 'bs-msg-bubble' + (fromBot ? ' bs-msg-bot-bubble' : '');
+    if (fromBot) {
+      const senderTag = document.createElement('div');
+      senderTag.className = 'bs-chat-bot-tag';
+      senderTag.style.marginBottom = '4px';
+      senderTag.textContent = '🤖 BidStage Поддержка';
+      bubble.appendChild(senderTag);
+    }
+    const textNode = document.createElement('div');
+    textNode.style.whiteSpace = 'pre-wrap';
+    textNode.textContent = m.message;
+    bubble.appendChild(textNode);
+    if (fromBot && m.lot_id) {
+      const actions = document.createElement('div');
+      actions.className = 'bs-msg-bot-actions';
+      const lotBtn = document.createElement('a');
+      lotBtn.className = 'bs-msg-bot-btn bs-msg-bot-btn-secondary';
+      lotBtn.href = '/lot/' + m.lot_id;
+      lotBtn.innerHTML = '<iconify-icon icon="lucide:external-link"></iconify-icon> Открыть лот';
+      actions.appendChild(lotBtn);
+      const lower = (m.message || '').toLowerCase();
+      if (lower.includes('победили') || lower.includes('оплатите') || lower.includes('лот переходит к вам') || lower.includes('переходит')) {
+        const payBtn = document.createElement('a');
+        payBtn.className = 'bs-msg-bot-btn';
+        payBtn.href = '/me#payments';
+        payBtn.innerHTML = '<iconify-icon icon="lucide:credit-card"></iconify-icon> Оплатить';
+        actions.appendChild(payBtn);
+      }
+      if (lower.includes('покупатель оплатил') || lower.includes('отправьте билет')) {
+        const dlvBtn = document.createElement('a');
+        dlvBtn.className = 'bs-msg-bot-btn';
+        dlvBtn.href = '/sell#escrow';
+        dlvBtn.innerHTML = '<iconify-icon icon="lucide:ticket"></iconify-icon> Отправить билет';
+        actions.appendChild(dlvBtn);
+      }
+      if (lower.includes('подтвердите получение') || lower.includes('продавец отправил билет')) {
+        const confirmBtn = document.createElement('a');
+        confirmBtn.className = 'bs-msg-bot-btn';
+        confirmBtn.href = '/me#payments';
+        confirmBtn.innerHTML = '<iconify-icon icon="lucide:check-circle"></iconify-icon> Подтвердить получение';
+        actions.appendChild(confirmBtn);
+      }
+      bubble.appendChild(actions);
+    }
+    const meta = document.createElement('span');
+    meta.className = 'bs-msg-meta';
+    const t = m.created_at ? new Date(m.created_at) : new Date();
+    meta.textContent = t.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    bubble.appendChild(meta);
+    wrapper.appendChild(bubble);
+    return wrapper;
+  }
+
+  async function loadMessages() {
+    if (!activeLotId) return;
+    messages.innerHTML = '<p class="text-sm text-muted text-center py-6">Загрузка...</p>';
+    try {
+      const url = '/api/lot/' + activeLotId + '/chat?peer=' + activePeerId;
+      const resp = await fetch(url);
+      const data = await resp.json().catch(() => ({}));
+      messages.innerHTML = '';
+      if (!data.messages || data.messages.length === 0) {
+        messages.innerHTML = '<p class="text-sm text-muted text-center py-6">Сообщений ещё нет. Напишите первым.</p>';
+        return;
+      }
+      data.messages.forEach(m => messages.appendChild(renderMessage(m)));
+      messages.scrollTop = messages.scrollHeight;
+    } catch (e) {
+      messages.innerHTML = '<p class="text-sm text-amber text-center py-6">Ошибка загрузки</p>';
+    }
+  }
+
+  list.addEventListener('click', e => {
+    const row = e.target.closest('.bs-chat-row');
+    if (row) selectChat(row);
+  });
+
+  if (form) {
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const text = (input.value || '').trim();
+      if (!text || !activeLotId) return;
+      input.value = '';
+      try {
+        const body = { message: text };
+        if (activePeerId) body.recipient_id = activePeerId;
+        const resp = await fetch('/api/lot/' + activeLotId + '/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+          if (window.bidstageToast) window.bidstageToast(data.message || 'Не удалось отправить', 'bad');
+          input.value = text;
+          return;
+        }
+        const msgPayload = (data && data.message) ? data.message : {
+          id: Date.now(),
+          lot_id: activeLotId,
+          sender_id: ME_ID,
+          sender_username: 'me',
+          recipient_id: activePeerId,
+          message: text,
+          created_at: new Date().toISOString(),
+        };
+        if (!messages.querySelector('[data-msg-id="' + msgPayload.id + '"]')) {
+          const placeholder = messages.querySelector('p.text-sm.text-muted');
+          if (placeholder) placeholder.remove();
+          const node = renderMessage(msgPayload);
+          node.dataset.msgId = msgPayload.id;
+          messages.appendChild(node);
+          messages.scrollTop = messages.scrollHeight;
+        }
+        const row = list.querySelector('.bs-chat-row[data-chat-key="' + activeLotId + '-' + activePeerId + '"]');
+        if (row) {
+          const preview = row.querySelector('.bs-chat-preview');
+          if (preview) preview.textContent = text;
+        }
+      } catch (err) {
+        if (window.bidstageToast) window.bidstageToast('Сетевая ошибка', 'bad');
+        input.value = text;
+      }
+    });
+  }
+
+  if (backBtn) {
+    backBtn.addEventListener('click', () => {
+      document.body.classList.remove('bs-messenger-active-mobile');
+    });
+  }
+
+  function ensureChatRow(payload, peerForRow) {
+    const key = payload.lot_id + '-' + peerForRow;
+    let row = list.querySelector('.bs-chat-row[data-chat-key="' + key + '"]');
+    if (row) return row;
+    const isBot = BOT_USER_ID !== null && Number(peerForRow) === Number(BOT_USER_ID);
+    const peerName = isBot ? 'BidStage Поддержка' : (payload.sender_username || 'Пользователь');
+    row = document.createElement('div');
+    row.className = 'bs-chat-row' + (isBot ? ' bs-chat-row-bot' : '');
+    row.dataset.chatKey = key;
+    row.dataset.lotId = String(payload.lot_id);
+    row.dataset.peerId = String(peerForRow);
+    row.dataset.peerUsername = peerName;
+    row.dataset.lotTitle = '';
+    row.dataset.isBot = isBot ? '1' : '0';
+    row.dataset.search = peerName.toLowerCase();
+    const avaWrap = document.createElement('div');
+    avaWrap.className = 'bs-chat-avatar-wrap';
+    const ava = document.createElement('div');
+    ava.className = isBot ? 'bs-chat-avatar-fallback bs-chat-avatar-bot' : 'bs-chat-avatar-fallback';
+    ava.textContent = isBot ? '🤖' : peerName.slice(0, 2).toUpperCase();
+    avaWrap.appendChild(ava);
+    row.appendChild(avaWrap);
+    const meta = document.createElement('div');
+    meta.className = 'bs-chat-meta';
+    meta.innerHTML = '<div class="bs-chat-row-top"><p class="bs-chat-name">' + escapeHtml(peerName) + (isBot ? ' <span class="bs-chat-bot-tag">бот</span>' : '') + '</p><span class="bs-chat-time"></span></div><p class="bs-chat-lot truncate" data-translate>Лот #' + payload.lot_id + '</p><p class="bs-chat-preview"></p>';
+    row.appendChild(meta);
+    const empty = list.querySelector('.bs-chat-empty');
+    if (empty) empty.remove();
+    if (isBot) {
+      list.insertBefore(row, list.firstChild);
+    } else {
+      list.appendChild(row);
+    }
+    return row;
+  }
+
+  if (typeof io !== 'undefined' && window.socket) {
+    bindChatSocket();
+  } else {
+    let tries = 0;
+    const iv = setInterval(() => {
+      tries += 1;
+      if (window.socket) { bindChatSocket(); clearInterval(iv); return; }
+      if (tries > 40) clearInterval(iv);
+    }, 250);
+  }
+
+  function bindChatSocket() {
+    window.socket.on('chat_message', payload => {
+      const lotMatch = Number(payload.lot_id) === activeLotId;
+      const partyMatch = (
+        (Number(payload.sender_id) === activePeerId && Number(payload.recipient_id) === Number(ME_ID)) ||
+        (Number(payload.sender_id) === Number(ME_ID) && Number(payload.recipient_id) === activePeerId)
+      );
+      if (lotMatch && partyMatch) {
+        if (messages.querySelector('[data-msg-id="' + payload.id + '"]')) return;
+        const placeholder = messages.querySelector('p.text-sm.text-muted');
+        if (placeholder) placeholder.remove();
+        const node = renderMessage(payload);
+        node.dataset.msgId = payload.id;
+        messages.appendChild(node);
+        messages.scrollTop = messages.scrollHeight;
+      } else if (Number(payload.sender_id) !== Number(ME_ID)) {
+        if (window.bidstageToast) window.bidstageToast('Сообщение от ' + (payload.sender_username || ''), 'good');
+      }
+      const peerForRow = Number(payload.sender_id) === Number(ME_ID) ? payload.recipient_id : payload.sender_id;
+      const row = ensureChatRow(payload, peerForRow);
+      const preview = row.querySelector('.bs-chat-preview');
+      if (preview) preview.textContent = payload.message;
+      const time = row.querySelector('.bs-chat-time');
+      if (time) {
+        const t = payload.created_at ? new Date(payload.created_at) : new Date();
+        time.textContent = t.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }) + ' ' + t.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+      }
+      if (Number(payload.sender_id) !== Number(ME_ID) && (Number(payload.lot_id) !== activeLotId || Number(payload.sender_id) !== activePeerId)) {
+        let unread = row.querySelector('.bs-chat-unread');
+        if (!unread) {
+          unread = document.createElement('span');
+          unread.className = 'bs-chat-unread';
+          unread.textContent = '1';
+          row.querySelector('.bs-chat-avatar-wrap').appendChild(unread);
+        } else {
+          unread.textContent = String((parseInt(unread.textContent) || 0) + 1);
+        }
+      }
+    });
+  }
+
+  const firstRow = list.querySelector('.bs-chat-row');
+  if (firstRow && window.innerWidth >= 768) selectChat(firstRow);
+})();
+</script>
+{% endblock %}

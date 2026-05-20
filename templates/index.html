@@ -1,0 +1,396 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<main class="relative mx-auto max-w-[1440px] px-6 py-10 lg:px-12 lg:py-14">
+
+  {% set hero = lots[0] if lots else None %}
+  <section class="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12 mb-16 lg:mb-20">
+    <div class="lg:col-span-7 relative">
+      <div class="cyber-card p-2 aspect-[4/3] relative group overflow-hidden">
+        <div class="absolute inset-0 angular-small bg-[linear-gradient(135deg,#7c5cfc_0%,#1a1a2e_45%,#f0a500_100%)] opacity-90 transition-opacity group-hover:opacity-100"></div>
+        <div class="absolute inset-0 angular-small bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.18),transparent_45%)]"></div>
+        <div class="absolute top-6 left-6 flex flex-col gap-2 z-10">
+          <span class="pill">Premium drop {% if hero %}#{{ hero.id }}{% else %}#000{% endif %}</span>
+          <span class="pill pill-violet">Verified protocol</span>
+        </div>
+        {% if hero and hero.status == 'active' %}
+        <div class="absolute bottom-6 left-6 right-6 z-10">
+          <p class="heading text-3xl font-bold leading-none text-white md:text-4xl" data-translate>{{ hero.title }}</p>
+          <p class="mt-2 text-xs uppercase tracking-wide text-white/70" data-translate>{{ hero.artist }}</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="lg:col-span-5 flex flex-col justify-center">
+      <div class="mb-8">
+        <h1 class="heading text-5xl font-extrabold leading-none lg:text-6xl">
+          <span data-i18n="hero.premium">ПРЕМИУМ</span><br>
+          <span class="text-violet" data-i18n="hero.auction">АУКЦИОН</span>
+        </h1>
+        <p class="mt-4 max-w-md text-base leading-relaxed text-muted" data-i18n="hero.subtitle">
+          Концертные лоты, VIP-столы и бэкстейдж-моменты в формате торгов в реальном времени. Чтобы ставка засчиталась — поделись лотом в соцсетях.
+        </p>
+      </div>
+
+      {% if hero %}
+      <div class="cyber-card p-6 sm:p-8 critical-pulse" data-lot-id="{{ hero.id }}" data-status="{{ hero.status }}" data-price-amd="{{ hero.current_price_amd }}" data-end-offset="{{ hero.end_offset_seconds }}" data-end-ts="{{ hero.end_ts_ms }}" data-step-amd="{{ hero.step_amd }}" data-name="{{ hero.title }}">
+        <div class="flex items-end justify-between gap-4 mb-6">
+          <div>
+            <span class="block mb-1 text-xs uppercase tracking-wider text-muted" data-i18n="lot.currentBid">Текущая ставка</span>
+            <span class="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+              <span class="price" data-price-usd="{{ '%.2f'|format(hero.current_price_usd_value or 0) }}">${{ '%.2f'|format(hero.current_price_usd_value or 0) }}</span>
+            </span>
+          </div>
+          <div class="text-right">
+            <span class="block mb-1 text-xs uppercase tracking-wider text-muted">До конца</span>
+            <span class="timer glitch-amber block tabular-nums text-2xl font-bold sm:text-3xl" data-text="00:00:00">00:00:00</span>
+          </div>
+        </div>
+
+        {% if me %}
+        <a href="/lot/{{ hero.id }}" class="btn btn-violet btn-block">
+          Сделать ставку
+          <iconify-icon icon="lucide:arrow-right" class="text-base"></iconify-icon>
+        </a>
+        {% else %}
+        <a href="/auth/register" class="btn btn-violet btn-block">
+          Войти и сделать ставку
+          <iconify-icon icon="lucide:arrow-right" class="text-base"></iconify-icon>
+        </a>
+        {% endif %}
+
+        <div class="mt-5 flex items-center justify-between text-xs font-medium uppercase tracking-wide text-muted">
+          <span>Шаг: AMD {{ hero.step_amd }}</span>
+          <span>{{ hero.bid_count }} активных ставок</span>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="mb-12">
+    <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <p class="text-sm font-bold uppercase tracking-wider text-amber" data-i18n="catalog.topTitle">⭐ Топ</p>
+        <h2 class="heading mt-1 text-2xl font-bold tracking-tight md:text-3xl" data-i18n="catalog.topSubtitle">Продвинутые аукционы</h2>
+      </div>
+      <div class="flex gap-2">
+        <button type="button" id="carousel-prev" class="btn btn-ghost btn-sm" aria-label="Назад">
+          <iconify-icon icon="lucide:chevron-left" class="text-base"></iconify-icon>
+        </button>
+        <button type="button" id="carousel-next" class="btn btn-ghost btn-sm" aria-label="Вперёд">
+          <iconify-icon icon="lucide:chevron-right" class="text-base"></iconify-icon>
+        </button>
+      </div>
+    </div>
+
+    <div class="relative mb-2">
+      <div id="lot-carousel" class="carousel-viewport">
+        <div class="carousel-track">
+          {% for lot in featured_lots %}
+          <a href="/lot/{{ lot.id }}" class="lot-card group block" data-lot-id="{{ lot.id }}" data-status="{{ lot.status }}" data-price-amd="{{ lot.current_price_amd }}" data-end-offset="{{ lot.end_offset_seconds }}" data-end-ts="{{ lot.end_ts_ms }}" data-step-amd="{{ lot.step_amd }}" data-name="{{ lot.title }}">
+            <div class="lot-cover lot-cover-grad-{{ loop.index0 % 4 }} {% if lot.image_url %}has-image{% endif %}">
+              {% if lot.image_url %}
+              <img src="{{ lot.image_url }}" alt="{{ lot.title }}" class="lot-cover-img" loading="lazy" onerror="this.remove();">
+              {% endif %}
+              <div class="lot-cover-fade"></div>
+              <div class="lot-cover-pills">
+                <span class="pill pill-amber">⭐ TOP</span>
+                <span class="pill">#{{ lot.id }}</span>
+                {% if lot.end_offset_seconds < 3600 %}
+                <span class="pill pill-amber" data-i18n="badge.endingSoon">⏰ скоро финал</span>
+                {% endif %}
+              </div>
+              <div class="lot-cover-foot">
+                <p class="lot-cover-title" data-translate>{{ lot.title }}</p>
+                <p class="lot-cover-artist" data-translate>{{ lot.artist }}</p>
+              </div>
+            </div>
+            <div class="px-1 mt-3">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-xs uppercase tracking-wider text-muted">Ставка</p>
+                  <p class="price text-lg font-bold text-violet" data-price-usd="{{ '%.2f'|format(lot.current_price_usd_value or 0) }}">${{ '%.2f'|format(lot.current_price_usd_value or 0) }}</p>
+                </div>
+                <div class="text-right">
+                  <p class="text-xs uppercase tracking-wider text-muted">До конца</p>
+                  <p class="timer font-mono text-base font-bold tabular-nums" data-text="00:00:00">00:00:00</p>
+                </div>
+              </div>
+            </div>
+            <span class="carousel-item-overlay" aria-hidden="true"></span>
+          </a>
+          {% else %}
+          <div class="cyber-card p-8 text-center" style="min-width:280px;">
+            <iconify-icon icon="lucide:star" class="text-3xl text-amber"></iconify-icon>
+            <p class="mt-3 text-sm font-bold">В Топе пока пусто</p>
+            <p class="text-xs text-muted mt-1">Продавцы могут поднять свой лот за $10 при создании аукциона.</p>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <p class="text-sm font-bold uppercase tracking-wider text-violet" data-i18n="catalog.title">Каталог</p>
+        <h2 id="lots" class="heading mt-1 text-2xl font-bold tracking-tight md:text-3xl" data-i18n="catalog.subtitle">Концертные лоты</h2>
+        {% if search_query %}
+        <p class="mt-2 text-sm text-muted">Результаты поиска: «<span class="text-violet font-semibold">{{ search_query }}</span>» — найдено {{ lots|length }} <a href="/" class="text-violet hover:underline ml-2">сбросить</a></p>
+        {% endif %}
+      </div>
+      <div class="flex flex-wrap items-center gap-3">
+        <form method="get" action="/" class="relative md:hidden">
+          <iconify-icon icon="lucide:search" class="bs-search-icon"></iconify-icon>
+          <input type="text" name="q" value="{{ search_query or '' }}" class="bs-search-input" placeholder="Поиск..." style="width:240px;">
+        </form>
+        <div class="seg">
+          <button type="button" data-filter="active" class="filter-btn seg-btn seg-btn-active" data-i18n="filter.active">Активные</button>
+          <button type="button" data-filter="ended" class="filter-btn seg-btn" data-i18n="filter.ended">Завершены</button>
+          <button type="button" data-filter="upcoming" class="filter-btn seg-btn" data-i18n="filter.upcoming">Скоро</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="lot-grid" data-current-filter="active" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 sm:gap-6">
+      {% for lot in lots %}
+      <a href="/lot/{{ lot.id }}" class="lot-card group block" data-lot-id="{{ lot.id }}" data-status="{{ lot.status }}" data-price-amd="{{ lot.current_price_amd }}" data-end-offset="{{ lot.end_offset_seconds }}" data-end-ts="{{ lot.end_ts_ms }}" data-step-amd="{{ lot.step_amd }}" data-name="{{ lot.title }}">
+        <div class="lot-cover lot-cover-grad-{{ loop.index0 % 4 }} {% if lot.image_url %}has-image{% endif %}">
+          {% if lot.image_url %}
+          <img src="{{ lot.image_url }}" alt="{{ lot.title }}" class="lot-cover-img" loading="lazy" onerror="this.remove();">
+          {% endif %}
+          <div class="lot-cover-fade"></div>
+          <div class="lot-cover-pills">
+            <span class="pill">#{{ lot.id }}</span>
+            <span class="pill {% if lot.status == 'active' %}pill-violet{% elif lot.status == 'ended' %}pill-muted{% else %}pill-amber-soft{% endif %}" data-i18n="status.{{ lot.status }}">
+              {% if lot.status == 'active' %}Идёт{% elif lot.status == 'ended' %}Завершён{% else %}Скоро{% endif %}
+            </span>
+          </div>
+          <div class="lot-cover-foot">
+            <p class="lot-cover-title" data-translate>{{ lot.title }}</p>
+            <p class="lot-cover-artist" data-translate>{{ lot.artist }}</p>
+          </div>
+          {% if lot.end_offset_seconds < 600 and lot.status == 'active' %}
+          <span class="pill pill-amber lot-cover-extra" data-i18n="badge.finalHour">Финальный час</span>
+          {% elif lot.bid_count > 0 %}
+          <span class="pill pill-success lot-cover-extra" data-i18n="badge.reserveMet">Резерв пройден</span>
+          {% endif %}
+        </div>
+        <div class="px-1">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0 flex-1">
+              <h4 class="heading mb-1 truncate text-base font-bold sm:text-lg" data-translate>{{ lot.title }}</h4>
+              <p class="truncate text-xs uppercase tracking-wide text-muted">
+                <span data-i18n="lot.type.{{ lot.lot_type }}">{% if lot.lot_type == 'tickets' %}Билеты{% elif lot.lot_type == 'vip' %}VIP-пропуск{% else %}Стол{% endif %}</span> · <span data-translate>{{ lot.artist }}</span>
+              </p>
+            </div>
+            <div class="text-right">
+              <span class="block text-xs uppercase tracking-wider text-muted" data-i18n="lot.currentBid">Текущая</span>
+              <span class="price text-base font-bold text-violet sm:text-lg" data-price-usd="{{ '%.2f'|format(lot.current_price_usd_value or 0) }}">${{ '%.2f'|format(lot.current_price_usd_value or 0) }}</span>
+            </div>
+          </div>
+          <div class="mt-3 flex items-center justify-between text-xs uppercase tracking-wide text-muted">
+            <span class="timer font-mono tabular-nums" data-text="00:00:00">00:00:00</span>
+            <span><span>{{ lot.bid_count }}</span> <span data-i18n="lot.bidsCount">ставок</span></span>
+          </div>
+        </div>
+      </a>
+      {% else %}
+      <div class="cyber-card col-span-full p-12 text-center">
+        <iconify-icon icon="lucide:gavel" class="text-4xl text-muted"></iconify-icon>
+        {% if search_query %}
+        <p class="mt-4 text-base font-bold">По запросу «{{ search_query }}» ничего не нашлось</p>
+        <p class="mt-1 text-sm text-muted">Попробуйте другой артист или название.</p>
+        <a href="/" class="btn btn-violet btn-sm mt-4">Сбросить поиск</a>
+        {% else %}
+        <p class="mt-4 text-sm text-muted">Активных лотов нет.</p>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+</main>
+{% endblock %}
+{% block scripts %}
+<script>
+class LotCarousel {
+  constructor(rootId, prevId, nextId) {
+    this.root = document.getElementById(rootId);
+    if (!this.root) return;
+    this.track = this.root.querySelector('.carousel-track');
+    if (!this.track) return;
+    this.cards = Array.from(this.track.querySelectorAll('.lot-card'));
+    if (this.cards.length === 0) return;
+    this.prevBtn = document.getElementById(prevId);
+    this.nextBtn = document.getElementById(nextId);
+    this.recalcDimensions();
+    this.activeStartIndex = 0;
+    this.locked = false;
+    this.lockMs = 450;
+    this.bind();
+    this.render(false);
+    requestAnimationFrame(() => requestAnimationFrame(() => this.render(false)));
+    window.addEventListener('resize', () => { this.recalcDimensions(); this.render(false); });
+  }
+  recalcDimensions() {
+    const vw = window.innerWidth || 1024;
+    if (vw < 640) { this.cardWidth = Math.max(240, vw - 80); this.gap = 12; }
+    else if (vw < 1024) { this.cardWidth = 320; this.gap = 18; }
+    else { this.cardWidth = 400; this.gap = 24; }
+  }
+  bind() {
+    if (this.prevBtn) this.prevBtn.addEventListener('click', (e) => { e.preventDefault(); this.advance(-1); });
+    if (this.nextBtn) this.nextBtn.addEventListener('click', (e) => { e.preventDefault(); this.advance(1); });
+    this.root.addEventListener('wheel', (e) => {
+      if (Math.abs(e.deltaY) < 5 && Math.abs(e.deltaX) < 5) return;
+      e.preventDefault();
+      const dir = (e.deltaY + e.deltaX) > 0 ? 1 : -1;
+      this.advance(dir);
+    }, { passive: false });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') this.advance(1);
+      else if (e.key === 'ArrowLeft') this.advance(-1);
+    });
+    // Touch swipe для мобильных
+    let touchX = null, touchY = null;
+    this.root.addEventListener('touchstart', (e) => {
+      if (!e.touches[0]) return;
+      touchX = e.touches[0].clientX;
+      touchY = e.touches[0].clientY;
+    }, { passive: true });
+    this.root.addEventListener('touchend', (e) => {
+      if (touchX === null) return;
+      const dx = (e.changedTouches[0]?.clientX || touchX) - touchX;
+      const dy = (e.changedTouches[0]?.clientY || touchY) - touchY;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+        this.advance(dx < 0 ? 1 : -1);
+      }
+      touchX = touchY = null;
+    }, { passive: true });
+    this.cards.forEach((card) => {
+      card.addEventListener('click', (e) => {
+        const role = card.dataset.role;
+        if (role === 'side-left') { e.preventDefault(); this.advance(-1); }
+        else if (role === 'side-far-right') { e.preventDefault(); this.advance(2); }
+        else if (role === 'side-far-left') { e.preventDefault(); this.advance(-2); }
+      }, true);
+    });
+  }
+  advance(step) {
+    if (this.locked || !step) return;
+    const total = this.cards.length;
+    if (total < 2) return;
+    this.locked = true;
+    this.activeStartIndex = ((this.activeStartIndex + step) % total + total) % total;
+    this.render(true);
+    setTimeout(() => { this.locked = false; }, this.lockMs);
+  }
+  positionFor(role) {
+    const w = this.cardWidth;
+    const g = this.gap;
+    const half = w / 2;
+    const mobile = (window.innerWidth || 1024) < 640;
+    if (mobile) {
+      switch (role) {
+        case 'active-left':
+        case 'active-right':    return { x: 0, scale: 1, opacity: 1, hidden: false };
+        case 'side-left':       return { x: -(w + g), scale: 0.85, opacity: 0.55, hidden: false };
+        case 'side-right':      return { x: (w + g), scale: 0.85, opacity: 0.55, hidden: false };
+        default:                return { x: 0, scale: 0.5, opacity: 0, hidden: true };
+      }
+    }
+    switch (role) {
+      case 'active-left':       return { x: -(half + g / 2), scale: 1, opacity: 1, hidden: false };
+      case 'active-right':      return { x: (half + g / 2), scale: 1, opacity: 1, hidden: false };
+      case 'side-left':         return { x: -(w + g + half * 0.75), scale: 0.75, opacity: 1, hidden: false };
+      case 'side-right':        return { x: (w + g + half * 0.75), scale: 0.75, opacity: 1, hidden: false };
+      case 'side-far-left':     return { x: -(w * 1.7 + g * 1.5 + half * 0.55), scale: 0.55, opacity: 0.4, hidden: false };
+      case 'side-far-right':    return { x: (w * 1.7 + g * 1.5 + half * 0.55), scale: 0.55, opacity: 0.4, hidden: false };
+      default:                  return { x: 0, scale: 0.5, opacity: 0, hidden: true };
+    }
+  }
+  roleAt(i) {
+    const total = this.cards.length;
+    const a = this.activeStartIndex;
+    const mobile = (window.innerWidth || 1024) < 640;
+    if (mobile) {
+      // Один активный + по одному с боков
+      if (i === a) return 'active-left';
+      if (i === ((a - 1) % total + total) % total) return 'side-left';
+      if (i === (a + 1) % total) return 'side-right';
+      return 'hidden';
+    }
+    const b = (a + 1) % total;
+    if (i === a) return 'active-left';
+    if (i === b) return 'active-right';
+    if (i === ((a - 1) % total + total) % total) return 'side-left';
+    if (i === (b + 1) % total) return 'side-right';
+    if (i === ((a - 2) % total + total) % total) return 'side-far-left';
+    if (i === (b + 2) % total) return 'side-far-right';
+    return 'hidden';
+  }
+  render(animate) {
+    this.cards.forEach((card, i) => {
+      const role = this.roleAt(i);
+      card.dataset.role = role;
+      const p = this.positionFor(role);
+      if (!animate) card.classList.add('no-anim');
+      const transform = `translate(-50%, 0) translateX(${p.x}px) scale(${p.scale})`;
+      card.style.transform = transform;
+      card.style.opacity = String(p.opacity);
+      card.classList.toggle('is-hidden', p.hidden);
+      card.classList.toggle('is-active', role === 'active-left' || role === 'active-right');
+      card.classList.toggle('is-side', role.startsWith('side'));
+      if (!animate) {
+        requestAnimationFrame(() => requestAnimationFrame(() => card.classList.remove('no-anim')));
+      }
+    });
+  }
+}
+
+(function () {
+  const carouselEl = document.getElementById('lot-carousel');
+  if (carouselEl) {
+    new LotCarousel('lot-carousel', 'carousel-prev', 'carousel-next');
+  }
+
+  const btn = document.getElementById('dev-win-btn');
+  if (!btn) return;
+  btn.addEventListener('click', async () => {
+    const firstLot = document.querySelector('.lot-card[data-status="active"]');
+    if (!firstLot) {
+      if (window.bidstageToast) window.bidstageToast('Нет активных лотов', 'warn');
+      return;
+    }
+    const lotId = firstLot.dataset.lotId;
+    const armed = btn.getAttribute('data-armed') === '1';
+    if (!armed) {
+      btn.setAttribute('data-armed', '1');
+      btn.dataset.original = btn.innerHTML;
+      btn.innerHTML = '<iconify-icon icon="lucide:alert-triangle"></iconify-icon> Подтвердите ещё раз';
+      setTimeout(() => {
+        if (btn.getAttribute('data-armed') === '1') {
+          btn.removeAttribute('data-armed');
+          btn.innerHTML = btn.dataset.original;
+        }
+      }, 3500);
+      return;
+    }
+    btn.disabled = true;
+    try {
+      const resp = await fetch('/api/dev/win-now/' + lotId, { method: 'POST' });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        if (window.bidstageToast) window.bidstageToast('Ошибка: ' + (data.error || resp.status), 'bad');
+        return;
+      }
+      window.location.href = data.redirect || '/me';
+    } catch (e) {
+      if (window.bidstageToast) window.bidstageToast('Сетевая ошибка', 'bad');
+    } finally {
+      btn.disabled = false;
+    }
+  });
+})();
+</script>
+{% endblock %}
