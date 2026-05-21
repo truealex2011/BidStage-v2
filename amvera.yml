@@ -10,3 +10,4 @@ build:
 run:
   persistenceMount: /data
   command: python app.py
+  containerPort: 5000
