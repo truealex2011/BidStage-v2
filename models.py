@@ -14,7 +14,27 @@ def get_pool():
         dsn = os.environ.get('DATABASE_URL')
         if not dsn:
             raise RuntimeError("DATABASE_URL is required")
-        _pool = psycopg2.pool.ThreadedConnectionPool(minconn=1, maxconn=20, dsn=dsn)
+        # psycopg2 < 2.7 doesn't parse postgresql:// URLs via dsn= kwarg.
+        # Use psycopg2.extensions.parse_dsn if available, otherwise fall back
+        # to passing the URL as the first positional argument to connect().
+        try:
+            import psycopg2.extensions as _ext
+            _ext.parse_dsn(dsn)  # test if it parses
+            _pool = psycopg2.pool.ThreadedConnectionPool(minconn=1, maxconn=20, dsn=dsn)
+        except Exception:
+            # Fallback: pass URL directly to connect() which handles postgresql:// URLs
+            _pool = psycopg2.pool.ThreadedConnectionPool(minconn=1, maxconn=20, dsn=None, database=None)
+            # Re-create pool using connect() directly via monkey-patch approach
+            import urllib.parse as _up
+            r = _up.urlparse(dsn)
+            _pool = psycopg2.pool.ThreadedConnectionPool(
+                minconn=1, maxconn=20,
+                host=r.hostname,
+                port=r.port or 5432,
+                dbname=r.path.lstrip('/'),
+                user=r.username,
+                password=r.password,
+            )
     return _pool
 
 
