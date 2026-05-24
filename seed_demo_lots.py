@@ -24,10 +24,10 @@ import models  # noqa: E402
 DEMO_USERS = [
     {'username': 'demo_anna', 'email': 'anna@bidstage.demo', 'country': 'AM'},
     {'username': 'demo_boris', 'email': 'boris@bidstage.demo', 'country': 'RU'},
-    {'username': 'demo_carl', 'email': 'carl@bidstage.demo', 'country': 'US'},
+    {'username': 'demo_carl', 'email': 'carl@bidstage.demo', 'country': 'OTHER'},
     {'username': 'demo_diana', 'email': 'diana@bidstage.demo', 'country': 'RU'},
     {'username': 'demo_elena', 'email': 'elena@bidstage.demo', 'country': 'AM'},
-    {'username': 'demo_felix', 'email': 'felix@bidstage.demo', 'country': 'US'},
+    {'username': 'demo_felix', 'email': 'felix@bidstage.demo', 'country': 'OTHER'},
     {'username': 'demo_gleb', 'email': 'gleb@bidstage.demo', 'country': 'RU'},
     {'username': 'demo_helen', 'email': 'helen@bidstage.demo', 'country': 'AM'},
 ]
