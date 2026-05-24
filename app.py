@@ -63,6 +63,7 @@ def _bootstrap_database():
         models.ensure_lot_events_table(conn)
         notify.ensure_notifications_table(conn)
         notify.ensure_bot_user(conn)
+        models.ensure_push_subscriptions_table(conn)
         conn.commit()
 
 

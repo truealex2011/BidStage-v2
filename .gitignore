@@ -10,3 +10,8 @@ build/
 .venv/
 venv/
 *.log
+.backup/
+.kiro/
+.vscode/
+.DS_Store
+Thumbs.db

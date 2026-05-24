@@ -74,6 +74,21 @@ def insert_notification(user_id, kind, title, body, lot_id=None, payment_id=None
     with models.get_conn() as conn:
         ensure_notifications_table(conn)
         with conn.cursor() as cur:
+            # Защита от дублей: если у юзера уже есть НЕпрочитанное уведомление
+            # того же типа по тому же лоту за последний час — не плодим новое.
+            if lot_id is not None and kind:
+                cur.execute(
+                    "SELECT id FROM notifications "
+                    "WHERE user_id = %s AND kind = %s AND lot_id = %s "
+                    "AND read_at IS NULL "
+                    "AND created_at >= NOW() - INTERVAL '1 hour' "
+                    "ORDER BY created_at DESC LIMIT 1",
+                    (int(user_id), kind, int(lot_id)),
+                )
+                existing = cur.fetchone()
+                if existing:
+                    conn.commit()
+                    return int(existing[0])
             cur.execute(
                 "INSERT INTO notifications (user_id, kind, title, body, lot_id, payment_id) "
                 "VALUES (%s, %s, %s, %s, %s, %s) RETURNING id, created_at",

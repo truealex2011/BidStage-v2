@@ -1,62 +1,171 @@
 ﻿{% extends "base.html" %}
+{% block title %}Регистрация — BidStage{% endblock %}
+{% block og_title %}Регистрация в BidStage{% endblock %}
+{% block og_description %}Создайте аккаунт BidStage и делайте ставки на премиум концертные лоты.{% endblock %}
 {% block content %}
-<main class="relative mx-auto grid max-w-[1100px] gap-6 px-6 py-12 lg:grid-cols-12 lg:gap-10 lg:px-12">
-  <section class="cyber-card p-8 sm:p-10 lg:col-span-7">
-    <span class="pill pill-amber-soft">Регистрация</span>
-    <h1 class="heading mt-4 text-3xl font-bold">Создать аккаунт</h1>
-    <p class="mt-2 text-sm text-muted">Имя — латиница/цифры/<span class="kbd">_ . -</span>, 3-32 символа. Пароль — от 8.</p>
+<main class="auth-stage relative mx-auto max-w-[1180px] px-6 py-10 lg:px-12 lg:py-16">
+  <div class="auth-bg" aria-hidden="true">
+    <div class="auth-bg-orb auth-bg-orb-violet"></div>
+    <div class="auth-bg-orb auth-bg-orb-gold"></div>
+  </div>
 
-    <form id="register-form" class="mt-6 space-y-4" data-persist>
-      <div class="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label class="field-label" for="reg-username">Имя пользователя</label>
-          <input id="reg-username" name="username" type="text" autocomplete="username" class="field" minlength="3" maxlength="32" required>
+  <div class="grid gap-6 lg:grid-cols-12 lg:gap-10 items-stretch relative">
+    <section class="auth-card cyber-card p-8 sm:p-10 lg:col-span-7">
+      <span class="hero-kicker"><span class="hero-kicker-bar"></span><span>BidStage · Sign up</span></span>
+      <h1 class="auth-h1">
+        <span class="hero-word-violet">Создать</span>
+        <span class="hero-word-gold">аккаунт</span>
+      </h1>
+      <p class="mt-3 text-sm text-muted">Имя — латиница/цифры/<span class="kbd">_ . -</span>, 3-32 символа. Пароль — от 8.</p>
+
+      <form id="register-form" class="mt-7 space-y-4" data-persist>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label class="field-label" for="reg-username">
+              <iconify-icon icon="lucide:user" class="text-base text-violet"></iconify-icon>
+              Имя пользователя
+            </label>
+            <input id="reg-username" name="username" type="text" autocomplete="username" class="field" minlength="3" maxlength="32" required>
+          </div>
+          <div>
+            <label class="field-label" for="reg-email">
+              <iconify-icon icon="lucide:mail" class="text-base text-violet"></iconify-icon>
+              Email <span class="text-faint normal-case">(опц.)</span>
+            </label>
+            <input id="reg-email" name="email" type="email" autocomplete="email" class="field">
+          </div>
         </div>
-        <div>
-          <label class="field-label" for="reg-email">Email <span class="text-faint normal-case">(опц.)</span></label>
-          <input id="reg-email" name="email" type="email" autocomplete="email" class="field">
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label class="field-label" for="reg-password">
+              <iconify-icon icon="lucide:lock" class="text-base text-violet"></iconify-icon>
+              Пароль
+            </label>
+            <div class="auth-input-with-toggle">
+              <input id="reg-password" name="password" type="password" autocomplete="new-password" class="field" minlength="8" required>
+              <button type="button" class="auth-pass-toggle" aria-label="Показать пароль" data-pass-toggle="reg-password">
+                <iconify-icon icon="lucide:eye" class="text-base"></iconify-icon>
+              </button>
+            </div>
+            <div class="auth-strength" aria-hidden="true">
+              <span class="auth-strength-bar"></span>
+              <span class="auth-strength-bar"></span>
+              <span class="auth-strength-bar"></span>
+              <span class="auth-strength-bar"></span>
+            </div>
+            <span class="auth-strength-label" id="pass-strength-label">введите пароль</span>
+          </div>
+          <div>
+            <label class="field-label" for="reg-country">
+              <iconify-icon icon="lucide:flag" class="text-base text-violet"></iconify-icon>
+              Страна
+            </label>
+            <select id="reg-country" name="country" class="field">
+              <option value="AM">Армения · IDram</option>
+              <option value="RU">Россия · YooKassa</option>
+              <option value="OTHER" selected>Другая · Stripe</option>
+            </select>
+          </div>
         </div>
+
+        <p id="register-error" class="auth-error hidden">
+          <iconify-icon icon="lucide:alert-triangle" class="text-base"></iconify-icon>
+          <span></span>
+        </p>
+        <button type="submit" class="btn btn-violet btn-block auth-cta">
+          <iconify-icon icon="lucide:user-plus" class="text-base"></iconify-icon>
+          Создать аккаунт
+        </button>
+      </form>
+
+      <div class="auth-divider"><span>или</span></div>
+
+      <div class="auth-secondary-row">
+        <a href="/auth/login" class="auth-link">
+          <iconify-icon icon="lucide:log-in" class="text-base"></iconify-icon>
+          Уже есть аккаунт? Войти
+        </a>
       </div>
+    </section>
 
-      <div class="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label class="field-label" for="reg-password">Пароль</label>
-          <input id="reg-password" name="password" type="password" autocomplete="new-password" class="field" minlength="8" required>
-        </div>
-        <div>
-          <label class="field-label" for="reg-country">Страна</label>
-          <select id="reg-country" name="country" class="field">
-            <option value="AM">Армения · IDram</option>
-            <option value="RU">Россия · YooKassa</option>
-            <option value="OTHER" selected>Другая · Stripe</option>
-          </select>
-        </div>
-      </div>
-
-      <p id="register-error" class="hidden text-xs font-bold uppercase tracking-wide" style="color:var(--danger);"></p>
-      <button type="submit" class="btn btn-violet btn-block">Создать аккаунт</button>
-    </form>
-
-    <div class="divider"></div>
-    <p class="text-sm text-muted">Уже есть? <a href="/auth/login" class="font-bold text-violet hover:underline">Войти</a></p>
-  </section>
-
-  <aside class="cyber-card p-8 lg:col-span-5">
-    <span class="pill">После регистрации</span>
-    <h2 class="heading mt-4 text-xl font-bold">4 шага до билета</h2>
-    <ol class="mt-5 space-y-3 text-sm">
-      <li class="flex items-start gap-3"><span class="pill pill-violet">1</span><span class="text-muted">Выбираете лот в каталоге</span></li>
-      <li class="flex items-start gap-3"><span class="pill pill-violet">2</span><span class="text-muted">Делаете ставку и шарите пост</span></li>
-      <li class="flex items-start gap-3"><span class="pill pill-violet">3</span><span class="text-muted">Привязываете карту в профиле</span></li>
-      <li class="flex items-start gap-3"><span class="pill pill-violet">4</span><span class="text-muted">Выигрываете → оплачиваете → получаете билет</span></li>
-    </ol>
-  </aside>
+    <aside class="auth-side cyber-card p-8 lg:col-span-5">
+      <span class="pill pill-amber-soft inline-flex items-center gap-1"><iconify-icon icon="lucide:sparkles" class="text-xs"></iconify-icon> После регистрации</span>
+      <h2 class="heading mt-4 text-xl font-bold">4 шага до билета</h2>
+      <ol class="auth-steps">
+        <li class="auth-step">
+          <span class="auth-step-num">01</span>
+          <div>
+            <p class="auth-step-title">Выбираете лот</p>
+            <p class="auth-step-body">в каталоге концертов и VIP-столов</p>
+          </div>
+        </li>
+        <li class="auth-step">
+          <span class="auth-step-num">02</span>
+          <div>
+            <p class="auth-step-title">Делаете ставку</p>
+            <p class="auth-step-body">и шарите пост в VK или FB</p>
+          </div>
+        </li>
+        <li class="auth-step">
+          <span class="auth-step-num">03</span>
+          <div>
+            <p class="auth-step-title">Привязываете карту</p>
+            <p class="auth-step-body">в профиле для мгновенной оплаты</p>
+          </div>
+        </li>
+        <li class="auth-step">
+          <span class="auth-step-num">04</span>
+          <div>
+            <p class="auth-step-title">Выигрываете билет</p>
+            <p class="auth-step-body">оплата → 32-значный код в чате</p>
+          </div>
+        </li>
+      </ol>
+    </aside>
+  </div>
 </main>
 
 <script>
+document.querySelectorAll('[data-pass-toggle]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const input = document.getElementById(btn.dataset.passToggle);
+    if (!input) return;
+    const isPwd = input.type === 'password';
+    input.type = isPwd ? 'text' : 'password';
+    btn.querySelector('iconify-icon').setAttribute('icon', isPwd ? 'lucide:eye-off' : 'lucide:eye');
+  });
+});
+
+(function () {
+  const pass = document.getElementById('reg-password');
+  const bars = document.querySelectorAll('.auth-strength-bar');
+  const label = document.getElementById('pass-strength-label');
+  if (!pass || !bars.length) return;
+  function score(p) {
+    let s = 0;
+    if (p.length >= 8) s++;
+    if (p.length >= 12) s++;
+    if (/[A-ZА-Я]/.test(p) && /[a-zа-я]/.test(p)) s++;
+    if (/\d/.test(p) && /[^A-Za-zА-Яа-я0-9]/.test(p)) s++;
+    return Math.min(s, 4);
+  }
+  const titles = ['', 'слабый', 'средний', 'хороший', 'отличный'];
+  const colors = ['', 'rgba(255, 77, 109, 0.85)', 'rgba(240, 165, 0, 0.85)', 'rgba(46, 213, 115, 0.85)', 'rgba(46, 213, 115, 0.95)'];
+  pass.addEventListener('input', () => {
+    const s = pass.value ? score(pass.value) : 0;
+    bars.forEach((b, i) => {
+      b.style.background = i < s ? colors[s] : 'rgba(255, 255, 255, 0.06)';
+    });
+    label.textContent = pass.value ? titles[s] : 'введите пароль';
+    label.style.color = s ? colors[s] : 'var(--text-faint)';
+  });
+})();
+
 document.getElementById('register-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const err = document.getElementById('register-error');
+  const errSpan = err.querySelector('span');
   err.classList.add('hidden');
   const payload = {
     username: document.getElementById('reg-username').value.trim(),
@@ -79,13 +188,13 @@ document.getElementById('register-form').addEventListener('submit', async (e) =>
         username_taken: 'Имя занято',
         email_taken: 'Email уже используется',
       };
-      err.textContent = map[data.error] || ('Ошибка: ' + (data.error || resp.status));
+      errSpan.textContent = map[data.error] || ('Ошибка: ' + (data.error || resp.status));
       err.classList.remove('hidden');
       return;
     }
     window.location.href = data.redirect || '/';
   } catch (e) {
-    err.textContent = 'Сетевая ошибка';
+    errSpan.textContent = 'Сетевая ошибка';
     err.classList.remove('hidden');
   }
 });

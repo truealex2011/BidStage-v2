@@ -1,32 +1,40 @@
 ﻿{% extends "base.html" %}
+{% block title %}Демо-вход — BidStage{% endblock %}
 {% block content %}
-<main class="relative mx-auto max-w-2xl px-6 py-12 lg:px-12">
-  <div class="cyber-card p-8 sm:p-10">
-    <h1 class="heading text-3xl font-bold">Войти как пользователь</h1>
-    <p class="mt-2 text-sm leading-relaxed text-muted">
-      Выберите одного из подготовленных пользователей, чтобы протестировать ставки, баланс и оплату.
-    </p>
-    <div class="mt-6 space-y-2.5">
+<main class="auth-stage relative mx-auto max-w-[760px] px-6 py-10 lg:px-12 lg:py-16">
+  <div class="auth-bg" aria-hidden="true">
+    <div class="auth-bg-orb auth-bg-orb-violet"></div>
+    <div class="auth-bg-orb auth-bg-orb-gold"></div>
+  </div>
+  <section class="auth-card cyber-card p-8 sm:p-10 relative">
+    <span class="hero-kicker"><span class="hero-kicker-bar"></span><span>BidStage · Demo</span></span>
+    <h1 class="auth-h1">
+      <span class="hero-word-violet">Демо</span>
+      <span class="hero-word-gold">вход</span>
+    </h1>
+    <p class="mt-3 text-sm text-muted">Выберите одного из подготовленных пользователей, чтобы протестировать ставки, баланс и оплату.</p>
+
+    <div class="mt-7 space-y-2.5">
       {% for u in users %}
       <form method="post" action="/auth/dev/login">
         <input type="hidden" name="username" value="{{ u.username }}">
-        <button type="submit" class="flex w-full items-center justify-between gap-4 rounded border border-white/[0.08] bg-white/[0.03] p-4 text-left transition hover:-translate-y-0.5 hover:border-violet hover:bg-white/[0.06]">
-          <div class="flex items-center gap-3">
-            <span class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#7c5cfc] to-[#f0a500] text-sm font-bold">{{ u.username[:2]|upper }}</span>
-            <div>
-              <p class="text-base font-semibold">{{ u.username }}</p>
-              <p class="text-xs uppercase tracking-wide text-muted">{{ u.country }} · {% if u.country == 'AM' %}IDram{% elif u.country == 'RU' %}YooKassa{% else %}Stripe{% endif %}</p>
-            </div>
+        <button type="submit" class="dev-user-row">
+          <span class="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-[#7c5cfc] to-[#f0a500] text-sm font-bold flex-shrink-0" style="box-shadow:0 0 14px rgba(240,165,0,0.3);">{{ u.username[:2]|upper }}</span>
+          <div class="flex-1 min-w-0 text-left">
+            <p class="text-base font-bold">{{ u.username }}</p>
+            <p class="text-xs uppercase tracking-wide text-muted">{{ u.country }} · {% if u.country == 'AM' %}IDram{% elif u.country == 'RU' %}YooKassa{% else %}Stripe{% endif %}</p>
           </div>
           <iconify-icon icon="lucide:log-in" class="text-xl text-violet"></iconify-icon>
         </button>
       </form>
       {% endfor %}
     </div>
-    <div class="mt-6 flex gap-3">
-      <a href="/auth/login" class="btn btn-ghost btn-sm">Обычный вход</a>
-      <a href="/auth/register" class="btn btn-violet btn-sm">Регистрация</a>
+
+    <div class="auth-divider"><span>или</span></div>
+    <div class="auth-secondary-row">
+      <a href="/auth/login" class="auth-link"><iconify-icon icon="lucide:log-in" class="text-base"></iconify-icon> Обычный вход</a>
+      <a href="/auth/register" class="auth-link auth-link-amber"><iconify-icon icon="lucide:user-plus" class="text-base"></iconify-icon> Регистрация</a>
     </div>
-  </div>
+  </section>
 </main>
 {% endblock %}

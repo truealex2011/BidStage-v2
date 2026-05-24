@@ -7,8 +7,12 @@
         <span class="pill pill-violet-soft"><iconify-icon icon="lucide:plus-circle"></iconify-icon> <span data-i18n="sell.newLot">Новый лот</span></span>
         <span class="pill pill-amber-soft" data-i18n="sell.paidListing">Платный листинг</span>
       </div>
-      <h1 class="heading mt-4 text-3xl font-bold" data-i18n="sell.createTitle">Создать аукцион</h1>
-      <p class="mt-2 text-sm text-muted" data-i18n="sell.createSubtitle">Выставите свой лот на торги. Платформа берёт листинговую комиссию и процент с финальной продажи.</p>
+      <span class="hero-kicker"><span class="hero-kicker-bar"></span><span data-i18n="sell.newLot">Новый лот</span></span>
+      <h1 class="page-hero-title" style="font-size:clamp(1.8rem,3.2vw,2.6rem);justify-content:flex-start;">
+        <span class="hero-word-violet">Создать</span>
+        <span class="hero-word-gold">аукцион</span>
+      </h1>
+      <p class="mt-3 text-sm text-muted" data-i18n="sell.createSubtitle">Выставите свой лот на торги. Платформа берёт листинговую комиссию и процент с финальной продажи.</p>
 
       <form id="create-lot-form" class="mt-6 space-y-4" data-persist>
         <div>
@@ -134,7 +138,7 @@
         <p class="mt-3 text-3xl font-bold" data-balance-display data-balance-usd="{{ balance }}">${{ '%.2f'|format(balance) }}</p>
         {% if escrow_total and escrow_total > 0 %}
         <div class="mt-3 rounded border border-amber/30 bg-amber/5 px-3 py-2">
-          <p class="text-xs uppercase tracking-wide text-amber font-bold" data-i18n="sell.inEscrow">🔒 В эскроу</p>
+          <p class="text-xs uppercase tracking-wide text-amber font-bold inline-flex items-center gap-1.5" data-i18n="sell.inEscrow"><iconify-icon icon="lucide:lock" class="text-xs"></iconify-icon> В эскроу</p>
           <p class="text-lg font-bold mt-0.5">${{ '%.2f'|format(escrow_total) }}</p>
           <p class="text-xs text-muted mt-0.5" data-i18n="sell.escrowHint">Поступит после подтверждения покупателей</p>
         </div>
@@ -177,7 +181,7 @@
   <section class="cyber-card mt-8 p-6">
     <div class="flex items-center justify-between mb-4">
       <div>
-        <p class="text-xs font-bold uppercase tracking-wide text-amber" data-i18n="sell.escrowSection">🔒 Эскроу</p>
+        <p class="text-xs font-bold uppercase tracking-wide text-amber inline-flex items-center gap-2" data-i18n="sell.escrowSection"><iconify-icon icon="lucide:lock" class="text-base"></iconify-icon> Эскроу</p>
         <h2 class="heading mt-1 text-xl font-bold" data-i18n="sell.escrowDeals">Сделки в обработке</h2>
         <p class="text-xs text-muted mt-1" data-i18n="sell.escrowDealsHint">Отправьте билет покупателю. Деньги поступят на ваш баланс после подтверждения получения.</p>
       </div>
@@ -194,11 +198,11 @@
           <div class="text-right flex-shrink-0">
             <p class="font-mono text-base font-bold">${{ ep.amount_usd }}</p>
             {% if ep.buyer_confirmed %}
-            <span class="pill pill-success">✓ Деньги получены</span>
+            <span class="pill pill-success inline-flex items-center gap-1"><iconify-icon icon="lucide:check" class="text-xs"></iconify-icon> Деньги получены</span>
             {% elif ep.ticket_delivered %}
             <span class="pill pill-violet-soft">⏳ Ждём подтверждения</span>
             {% else %}
-            <span class="pill pill-amber-soft">📦 Отправьте билет</span>
+            <span class="pill pill-amber-soft inline-flex items-center gap-1"><iconify-icon icon="lucide:package" class="text-xs"></iconify-icon> Отправьте билет</span>
             {% endif %}
           </div>
         </div>
@@ -215,7 +219,7 @@
           <p class="text-xs text-muted">Отправлен билет:</p>
           <p class="font-mono text-sm bg-white/[0.04] rounded px-3 py-2 mt-1 break-all">{{ ep.ticket_code }}</p>
           {% if ep.buyer_confirmed %}
-          <p class="text-xs text-success mt-2">✓ Покупатель подтвердил получение, деньги переведены</p>
+          <p class="text-xs text-success mt-2 inline-flex items-center gap-1.5"><iconify-icon icon="lucide:check-circle" class="text-sm"></iconify-icon> Покупатель подтвердил получение, деньги переведены</p>
           {% else %}
           <p class="text-xs text-amber mt-2">⏳ Ждём подтверждения от покупателя</p>
           {% endif %}

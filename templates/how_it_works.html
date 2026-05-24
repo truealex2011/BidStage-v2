@@ -1,103 +1,450 @@
 {% extends "base.html" %}
 {% block content %}
-<main class="relative mx-auto max-w-[1100px] px-6 py-10 lg:px-12 lg:py-14">
+<main class="relative mx-auto max-w-[1180px] px-6 py-10 lg:px-12 lg:py-14">
   <a href="/" class="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-muted hover:text-violet">
-    <iconify-icon icon="lucide:arrow-left" class="text-base"></iconify-icon> <span data-i18n="how.back">Назад на главную</span>
+    <iconify-icon icon="lucide:arrow-left" class="text-base"></iconify-icon>
+    <span data-i18n="how.back">Назад на главную</span>
   </a>
 
-  <header class="mt-6 mb-10">
-    <p class="text-sm font-bold uppercase tracking-wider text-violet" data-i18n="how.eyebrow">Инструкция</p>
-    <h1 class="heading mt-2 text-4xl font-extrabold leading-tight md:text-5xl" data-i18n="how.title">Как работает BidStage</h1>
-    <p class="mt-3 max-w-2xl text-base leading-relaxed text-muted" data-i18n="how.subtitle">Аукцион концертных лотов: чем выше ставка — тем ближе вы к билету. Чтобы ставка засчиталась, нужно поделиться лотом в соцсети.</p>
+  <header class="mt-6 mb-8 page-hero-header page-hero-left">
+    <span class="hero-kicker"><span class="hero-kicker-bar"></span><span data-i18n="how.eyebrow">Полная инструкция</span></span>
+    <h1 class="page-hero-title" data-i18n="how.title">
+      <span class="hero-word-violet">Как работает</span>
+      <span class="hero-word-gold">BidStage</span>
+    </h1>
+    <p class="page-hero-sub" data-i18n="how.subtitle">Премиум-аукцион билетов на концерты, спорт, рестораны и события. Чем выше ставка — тем ближе вы к победе. Чтобы ставка засчиталась, нужно поделиться лотом в соцсети.</p>
   </header>
 
-  <section class="grid gap-5 md:grid-cols-2 lg:grid-cols-3 mb-10">
-    <div class="cyber-card p-6">
-      <span class="pill pill-violet-soft mb-3"><iconify-icon icon="lucide:rocket"></iconify-icon> <span data-i18n="how.start">Старт</span></span>
-      <h3 class="heading mt-3 text-lg font-bold" data-i18n="how.s1.title">01 — Регистрация</h3>
-      <p class="mt-2 text-sm leading-relaxed text-white" data-i18n="how.s1.body">Создайте аккаунт по email или войдите через демо-юзера. Привяжите карту в профиле для мгновенной оплаты.</p>
-    </div>
-    <div class="cyber-card p-6">
-      <span class="pill pill-violet-soft mb-3"><iconify-icon icon="lucide:gavel"></iconify-icon> <span data-i18n="how.bid">Ставка</span></span>
-      <h3 class="heading mt-3 text-lg font-bold" data-i18n="how.s2.title">02 — Сделайте ставку</h3>
-      <p class="mt-2 text-sm leading-relaxed text-white" data-i18n="how.s2.body">Минимум — текущая цена + шаг. Доступна автоставка: установите максимум, система сама перебивает соперников.</p>
-    </div>
-    <div class="cyber-card p-6">
-      <span class="pill pill-violet-soft mb-3"><iconify-icon icon="lucide:share-2"></iconify-icon> <span data-i18n="how.share">Шара</span></span>
-      <h3 class="heading mt-3 text-lg font-bold" data-i18n="how.s3.title">03 — Поделитесь лотом</h3>
-      <p class="mt-2 text-sm leading-relaxed text-white" data-i18n="how.s3.body">Опубликуйте пост в VK или FB и пришлите ссылку на пост. Система автоматически проверит — если удалите пост, ставка аннулируется.</p>
-    </div>
-    <div class="cyber-card p-6">
-      <span class="pill pill-amber-soft mb-3"><iconify-icon icon="lucide:timer-reset"></iconify-icon> <span data-i18n="how.timer">Таймер</span></span>
-      <h3 class="heading mt-3 text-lg font-bold" data-i18n="how.s4.title">04 — Анти-снайпинг</h3>
-      <p class="mt-2 text-sm leading-relaxed text-white" data-i18n="how.s4.body">Ставка в последние 3 минуты автоматически продлевает торги на 180 секунд. Это защита от поздних снайперов.</p>
-    </div>
-    <div class="cyber-card p-6">
-      <span class="pill pill-success mb-3"><iconify-icon icon="lucide:trophy"></iconify-icon> <span data-i18n="how.win">Победа</span></span>
-      <h3 class="heading mt-3 text-lg font-bold" data-i18n="how.s5.title">05 — Оплата</h3>
-      <p class="mt-2 text-sm leading-relaxed text-white" data-i18n="how.s5.body">Победитель оплачивает выигрыш картой за 24 часа. Не оплатил — лот переходит к следующему биддеру.</p>
-    </div>
-    <div class="cyber-card p-6">
-      <span class="pill pill-success mb-3"><iconify-icon icon="lucide:ticket"></iconify-icon> <span data-i18n="how.ticket">Билет</span></span>
-      <h3 class="heading mt-3 text-lg font-bold" data-i18n="how.s6.title">06 — Электронный билет</h3>
-      <p class="mt-2 text-sm leading-relaxed text-white" data-i18n="how.s6.body">После оплаты вы получаете уникальный 32-значный код билета. Деньги в эскроу — продавец получит их только после подтверждения доставки.</p>
-    </div>
-  </section>
+  <!-- Якорная навигация -->
+  <nav class="mb-10 flex flex-wrap gap-2">
+    <a href="#start" class="pill pill-violet-soft"><iconify-icon icon="lucide:rocket"></iconify-icon><span>Быстрый старт</span></a>
+    <a href="#buyer" class="pill pill-violet-soft"><iconify-icon icon="lucide:hand-coins"></iconify-icon><span>Покупателям</span></a>
+    <a href="#seller" class="pill pill-amber-soft"><iconify-icon icon="lucide:tag"></iconify-icon><span>Продавцам</span></a>
+    <a href="#mechanics" class="pill pill-amber-soft"><iconify-icon icon="lucide:cpu"></iconify-icon><span>Механика</span></a>
+    <a href="#safety" class="pill pill-success"><iconify-icon icon="lucide:shield-check"></iconify-icon><span>Безопасность</span></a>
+    <a href="#faq" class="pill"><iconify-icon icon="lucide:help-circle"></iconify-icon><span>FAQ</span></a>
+  </nav>
 
-  <section class="cyber-card p-6 sm:p-8 mb-10" style="background:rgba(124,92,252,0.05);border-color:rgba(124,92,252,0.25);">
-    <div class="grid gap-6 md:grid-cols-3">
-      <div>
-        <p class="text-sm font-bold uppercase tracking-wider text-violet" data-i18n="how.protectBuyer">Защита покупателя</p>
-        <p class="mt-2 text-sm leading-relaxed text-white" data-i18n="how.protectBuyerBody">Деньги хранятся в эскроу. Продавец получит выплату только после того, как вы подтвердите получение билета.</p>
+  <!-- БЫСТРЫЙ СТАРТ -->
+  <section id="start" class="mb-12">
+    <div class="mb-5 flex items-center gap-3">
+      <iconify-icon icon="lucide:rocket" class="text-2xl text-amber" style="filter:drop-shadow(0 0 8px var(--glow-gold));"></iconify-icon>
+      <h2 class="heading text-2xl font-bold sm:text-3xl">Быстрый старт за 60 секунд</h2>
+    </div>
+    <div class="grid gap-5 md:grid-cols-3">
+      <div class="cyber-card p-6">
+        <div class="mb-3 flex h-10 w-10 items-center justify-center rounded-full font-mono text-base font-bold" style="background:linear-gradient(135deg,var(--primary),#4429c4);color:#fff;box-shadow:0 0 14px rgba(124,92,252,0.5);">1</div>
+        <h3 class="heading text-base font-bold mb-2">Зайдите как демо-юзер</h3>
+        <p class="text-sm leading-relaxed text-white">Откройте <code class="font-mono text-xs px-1.5 py-0.5 rounded bg-white/[0.06]">/auth/dev</code> и выберите любого готового пользователя. Карта «BidStage Test» уже привязана.</p>
       </div>
-      <div>
-        <p class="text-sm font-bold uppercase tracking-wider text-violet" data-i18n="how.protectSeller">Защита продавца</p>
-        <p class="mt-2 text-sm leading-relaxed text-white" data-i18n="how.protectSellerBody">Каждая ставка обеспечена обязательным шерингом и проверкой через VK API. Накрутить ставки сложнее.</p>
+      <div class="cyber-card p-6">
+        <div class="mb-3 flex h-10 w-10 items-center justify-center rounded-full font-mono text-base font-bold" style="background:linear-gradient(135deg,var(--primary),#4429c4);color:#fff;box-shadow:0 0 14px rgba(124,92,252,0.5);">2</div>
+        <h3 class="heading text-base font-bold mb-2">Откройте лот</h3>
+        <p class="text-sm leading-relaxed text-white">На главной выберите любой активный лот. Внутри увидите цену, шаг, таймер до конца и кнопку «Сделать ставку».</p>
       </div>
-      <div>
-        <p class="text-sm font-bold uppercase tracking-wider text-violet" data-i18n="how.cascade">Каскад платежей</p>
-        <p class="mt-2 text-sm leading-relaxed text-white" data-i18n="how.cascadeBody">Если победитель не оплатил — лот переходит ко второму. Не оплатил и он — снова в продажу с тем же таймером.</p>
+      <div class="cyber-card p-6">
+        <div class="mb-3 flex h-10 w-10 items-center justify-center rounded-full font-mono text-base font-bold" style="background:linear-gradient(135deg,var(--secondary),#8a5800);color:#fff;box-shadow:0 0 14px var(--glow-gold);">3</div>
+        <h3 class="heading text-base font-bold mb-2">Сделайте ставку</h3>
+        <p class="text-sm leading-relaxed text-white">Введите сумму, вставьте ссылку на пост в соцсети, подтвердите OTP-кодом. Готово — вы в торгах.</p>
       </div>
     </div>
   </section>
 
-  <section class="grid gap-5 md:grid-cols-2">
-    <div class="cyber-card p-6">
-      <p class="text-sm font-bold uppercase tracking-wider text-amber" data-i18n="how.fees">Тарифы продавца</p>
-      <ul class="mt-4 space-y-2.5 text-sm leading-relaxed text-white">
-        <li class="flex justify-between"><span data-i18n="how.feeListing">Листинг</span><span class="font-bold">$5</span></li>
-        <li class="flex justify-between"><span data-i18n="how.feeFeatured">Поднять в топ (Featured)</span><span class="font-bold text-amber">+$10</span></li>
-        <li class="flex justify-between"><span data-i18n="how.feeFinal">Комиссия с продажи</span><span class="font-bold">10%</span></li>
-      </ul>
-      <p class="mt-4 text-xs text-muted" data-i18n="how.feesNote">Если лот не продаётся, листинг не возвращается, но процент с продажи не списывается.</p>
+  <!-- ДЛЯ ПОКУПАТЕЛЕЙ -->
+  <section id="buyer" class="mb-12">
+    <div class="mb-5 flex items-center gap-3">
+      <iconify-icon icon="lucide:hand-coins" class="text-2xl text-violet"></iconify-icon>
+      <h2 class="heading text-2xl font-bold sm:text-3xl">Инструкция для покупателей</h2>
     </div>
-    <div class="cyber-card p-6">
-      <p class="text-sm font-bold uppercase tracking-wider text-amber" data-i18n="how.providers">Платёжные провайдеры</p>
-      <ul class="mt-4 space-y-2.5 text-sm leading-relaxed text-white">
-        <li class="flex justify-between"><span>🇦🇲 <span data-i18n="how.armenia">Армения</span></span><span class="font-bold">IDram</span></li>
-        <li class="flex justify-between"><span>🇷🇺 <span data-i18n="how.russia">Россия</span></span><span class="font-bold">YooKassa</span></li>
-        <li class="flex justify-between"><span>🌍 <span data-i18n="how.world">Другие страны</span></span><span class="font-bold">Stripe</span></li>
-      </ul>
-      <p class="mt-4 text-xs text-muted" data-i18n="how.providerNote">Система автоматически выбирает провайдера по стране в вашем профиле.</p>
+
+    <div class="space-y-4">
+      <!-- 01 регистрация -->
+      <div class="cyber-card p-6">
+        <div class="flex items-start gap-4">
+          <span class="pill pill-violet-soft flex-shrink-0"><span class="font-mono">01</span></span>
+          <div class="flex-1 min-w-0">
+            <h3 class="heading text-lg font-bold mb-2">Регистрация и привязка карты</h3>
+            <p class="text-sm leading-relaxed text-white mb-3">Создайте аккаунт по email + пароль или войдите через VK. В дев-режиме доступен раздел <code class="font-mono text-xs px-1.5 py-0.5 rounded bg-white/[0.06]">/auth/dev</code> с готовыми тестовыми пользователями.</p>
+            <p class="text-sm leading-relaxed text-white mb-2">В Профиле → раздел «Способы оплаты» добавьте карту. Это нужно для:</p>
+            <ul class="text-sm leading-relaxed text-white space-y-1 ml-4" style="list-style:disc;">
+              <li>пополнения баланса (списания на эскроу при ставке)</li>
+              <li>оплаты выигрыша после победы</li>
+            </ul>
+            <p class="text-xs text-muted mt-3">Карта храним только последние 4 цифры. Никаких CVV или PAN.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 02 поиск и фильтры -->
+      <div class="cyber-card p-6">
+        <div class="flex items-start gap-4">
+          <span class="pill pill-violet-soft flex-shrink-0"><span class="font-mono">02</span></span>
+          <div class="flex-1 min-w-0">
+            <h3 class="heading text-lg font-bold mb-2">Поиск нужного лота</h3>
+            <p class="text-sm leading-relaxed text-white mb-3">На главной найдите лот несколькими способами:</p>
+            <ul class="text-sm leading-relaxed text-white space-y-1.5 ml-4" style="list-style:disc;">
+              <li><strong>Глобальный поиск</strong> в шапке — по названию, артисту, описанию</li>
+              <li><strong>Карусель «Топ»</strong> — featured-лоты с приоритетным размещением</li>
+              <li><strong>Каталог-моз</strong> — все активные лоты с фильтром по категориям (Концерты, VIP, Столы, Горящие)</li>
+              <li><strong>Кнопка «Развернуть»</strong> — раскрывает каталог на весь экран</li>
+              <li><strong>Сегмент Активные / Скоро / Завершены</strong> — переключение по статусу</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 03 ставка -->
+      <div class="cyber-card p-6">
+        <div class="flex items-start gap-4">
+          <span class="pill pill-violet-soft flex-shrink-0"><span class="font-mono">03</span></span>
+          <div class="flex-1 min-w-0">
+            <h3 class="heading text-lg font-bold mb-2">Сделать ставку</h3>
+            <p class="text-sm leading-relaxed text-white mb-3">Откройте лот → нажмите «Сделать ставку». В модалке:</p>
+            <ol class="text-sm leading-relaxed text-white space-y-1.5 ml-4" style="list-style:decimal;">
+              <li>Введите сумму. Минимум — текущая цена + шаг лота. Превью показывает значение в AMD/RUB/USD.</li>
+              <li>Опубликуйте пост со ссылкой на лот в VK, Telegram, X, Facebook, OK, Reddit, LinkedIn или другой поддерживаемой сети.</li>
+              <li>Вставьте ссылку на этот пост в поле «Ссылка на шару».</li>
+              <li>Запросите OTP-код — он придёт уведомлением. Введите его и подтвердите.</li>
+            </ol>
+            <p class="text-sm leading-relaxed text-white mt-3">Сумма блокируется на балансе (эскроу). Если вас перебьют — она автоматически разблокируется.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 04 автоставка -->
+      <div class="cyber-card p-6">
+        <div class="flex items-start gap-4">
+          <span class="pill pill-amber-soft flex-shrink-0"><span class="font-mono">04</span></span>
+          <div class="flex-1 min-w-0">
+            <h3 class="heading text-lg font-bold mb-2">Автоставка (proxy-bid)</h3>
+            <p class="text-sm leading-relaxed text-white mb-3">В модалке ставки переключите режим на «Авто-перебивание». Укажите ваш максимум — система:</p>
+            <ul class="text-sm leading-relaxed text-white space-y-1.5 ml-4" style="list-style:disc;">
+              <li>сама будет повышать ставку на минимально необходимый шаг каждый раз, когда вас перебьют</li>
+              <li>остановится, если кто-то поставит больше вашего максимума</li>
+              <li>не разглашает ваш максимум другим участникам</li>
+            </ul>
+            <p class="text-xs text-muted mt-3">Шару всё равно нужно публиковать один раз — она применяется ко всему диапазону автоставок.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 05 победа -->
+      <div class="cyber-card p-6">
+        <div class="flex items-start gap-4">
+          <span class="pill pill-success flex-shrink-0"><span class="font-mono">05</span></span>
+          <div class="flex-1 min-w-0">
+            <h3 class="heading text-lg font-bold mb-2">Победа и оплата</h3>
+            <p class="text-sm leading-relaxed text-white mb-3">Когда таймер дойдёт до нуля:</p>
+            <ul class="text-sm leading-relaxed text-white space-y-1.5 ml-4" style="list-style:disc;">
+              <li>максимальная подтверждённая ставка побеждает</li>
+              <li>победитель получает уведомление и сообщение в чат от бота BidStage</li>
+              <li>в Профиле → «Эскроу и платежи» появляется кнопка <strong>«Оплатить картой»</strong> или <strong>«Списать с баланса»</strong></li>
+              <li>на оплату даётся 24 часа</li>
+            </ul>
+            <p class="text-sm leading-relaxed text-white mt-3"><iconify-icon icon="lucide:alert-triangle" class="text-amber"></iconify-icon> Не оплатили — лот переходит ко второму биддеру по каскаду.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 06 билет -->
+      <div class="cyber-card p-6">
+        <div class="flex items-start gap-4">
+          <span class="pill pill-success flex-shrink-0"><span class="font-mono">06</span></span>
+          <div class="flex-1 min-w-0">
+            <h3 class="heading text-lg font-bold mb-2">Получение билета и подтверждение</h3>
+            <p class="text-sm leading-relaxed text-white mb-3">После оплаты деньги уходят в эскроу. Дальше:</p>
+            <ol class="text-sm leading-relaxed text-white space-y-1.5 ml-4" style="list-style:decimal;">
+              <li>Продавец отправляет вам уникальный 32-значный код билета (или QR/файл) через систему.</li>
+              <li>Код приходит в Профиль и в чат с продавцом.</li>
+              <li>Когда вы убедились, что билет валиден — нажмите <strong>«Подтвердить получение»</strong>.</li>
+              <li>Только после этого деньги выходят из эскроу к продавцу.</li>
+            </ol>
+            <p class="text-xs text-muted mt-3">Если билет не пришёл или не работает — пишите в чат с поддержкой, эскроу замораживает выплату до разрешения.</p>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
-  <div class="mt-10 flex flex-wrap gap-3">
-    <a href="/" class="btn btn-violet">
-      <iconify-icon icon="lucide:home" class="text-base"></iconify-icon>
-      <span data-i18n="how.toHome">На главную</span>
-    </a>
-    {% if not me %}
-    <a href="/auth/register" class="btn btn-ghost">
-      <iconify-icon icon="lucide:user-plus" class="text-base"></iconify-icon>
-      <span data-i18n="how.signup">Создать аккаунт</span>
-    </a>
-    {% else %}
-    <a href="/sell" class="btn btn-ghost">
-      <iconify-icon icon="lucide:plus" class="text-base"></iconify-icon>
-      <span data-i18n="how.listLot">Выставить свой лот</span>
-    </a>
-    {% endif %}
-  </div>
+  <!-- ДЛЯ ПРОДАВЦОВ -->
+  <section id="seller" class="mb-12">
+    <div class="mb-5 flex items-center gap-3">
+      <iconify-icon icon="lucide:tag" class="text-2xl text-amber" style="filter:drop-shadow(0 0 8px var(--glow-gold));"></iconify-icon>
+      <h2 class="heading text-2xl font-bold sm:text-3xl">Инструкция для продавцов</h2>
+    </div>
+
+    <div class="grid gap-5 md:grid-cols-2">
+      <div class="cyber-card p-6">
+        <span class="pill pill-amber-soft mb-3"><iconify-icon icon="lucide:plus-circle"></iconify-icon><span>Создание лота</span></span>
+        <h3 class="heading text-lg font-bold mb-3 mt-2">Что нужно указать</h3>
+        <ul class="text-sm leading-relaxed text-white space-y-2 ml-4" style="list-style:disc;">
+          <li><strong>Название и артист</strong> — это видно покупателю в первую очередь</li>
+          <li><strong>Тип</strong> — Концерт, VIP, Стол, Спорт, Театр</li>
+          <li><strong>Дата концерта</strong> — для покупателя ясно, когда событие</li>
+          <li><strong>Стартовая цена</strong> и <strong>шаг ставки</strong> в USD</li>
+          <li><strong>Длительность торгов</strong> — от 30 минут до 7 дней</li>
+          <li><strong>Картинка</strong> — JPG/PNG/WebP/GIF до 6 МБ</li>
+          <li><strong>Описание</strong> — место, ряд, секция, любые детали</li>
+        </ul>
+      </div>
+
+      <div class="cyber-card p-6">
+        <span class="pill pill-amber-soft mb-3"><iconify-icon icon="lucide:flame"></iconify-icon><span>Featured-флаг</span></span>
+        <h3 class="heading text-lg font-bold mb-3 mt-2">Поднять в карусель «Топ»</h3>
+        <p class="text-sm leading-relaxed text-white mb-3">При создании лота включите чекбокс <strong>Featured</strong>. Лот появится в премиум-карусели на главной — это в 4-5 раз больше показов.</p>
+        <p class="text-sm leading-relaxed text-white">Стоит дополнительные <span class="font-bold text-amber">$10</span> к листингу. Списывается с баланса в момент публикации.</p>
+      </div>
+
+      <div class="cyber-card p-6">
+        <span class="pill pill-success mb-3"><iconify-icon icon="lucide:dollar-sign"></iconify-icon><span>Тарифы</span></span>
+        <h3 class="heading text-lg font-bold mb-3 mt-2">Сколько вы платите</h3>
+        <ul class="text-sm leading-relaxed text-white space-y-2.5">
+          <li class="flex justify-between"><span>Листинг (публикация)</span><span class="font-bold">$5</span></li>
+          <li class="flex justify-between"><span>Featured (опционально)</span><span class="font-bold text-amber">+$10</span></li>
+          <li class="flex justify-between"><span>Комиссия с продажи</span><span class="font-bold">10%</span></li>
+        </ul>
+        <p class="text-xs text-muted mt-3">Если лот не продаётся — листинг не возвращается, но 10% не списывается.</p>
+      </div>
+
+      <div class="cyber-card p-6">
+        <span class="pill pill-violet-soft mb-3"><iconify-icon icon="lucide:ticket"></iconify-icon><span>Доставка билета</span></span>
+        <h3 class="heading text-lg font-bold mb-3 mt-2">Как закрыть сделку</h3>
+        <ol class="text-sm leading-relaxed text-white space-y-1.5 ml-4" style="list-style:decimal;">
+          <li>Лот завершился, победитель оплатил — вы видите запись в «Мои лоты».</li>
+          <li>Кнопка «Отправить билет» — вставьте код, ссылку или QR.</li>
+          <li>Покупатель проверяет и подтверждает получение.</li>
+          <li>Деньги (минус 10% комиссии) выходят на ваш баланс. Можно вывести на карту.</li>
+        </ol>
+        <p class="text-xs text-muted mt-3">Эскроу удерживает оплату до подтверждения. Это защита от споров.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- МЕХАНИКА -->
+  <section id="mechanics" class="mb-12">
+    <div class="mb-5 flex items-center gap-3">
+      <iconify-icon icon="lucide:cpu" class="text-2xl text-amber" style="filter:drop-shadow(0 0 8px var(--glow-gold));"></iconify-icon>
+      <h2 class="heading text-2xl font-bold sm:text-3xl">Как работает аукцион внутри</h2>
+    </div>
+
+    <div class="grid gap-5 md:grid-cols-2">
+      <div class="cyber-card p-6">
+        <span class="pill pill-amber-soft mb-3"><iconify-icon icon="lucide:share-2"></iconify-icon><span>Шара</span></span>
+        <h3 class="heading text-lg font-bold mb-3 mt-2">Подтверждение шары</h3>
+        <p class="text-sm leading-relaxed text-white mb-2">Каждая ставка обязательно сопровождается публикацией поста со ссылкой на лот.</p>
+        <p class="text-sm leading-relaxed text-white mb-2">Через ~60 секунд после ставки система:</p>
+        <ol class="text-sm leading-relaxed text-white space-y-1 ml-4" style="list-style:decimal;">
+          <li>проверяет, что ссылка с белого списка доменов (VK, Telegram, X, FB, OK, IG, Reddit, LinkedIn, Pinterest)</li>
+          <li>загружает HTML страницы поста</li>
+          <li>ищет в нём подстроку <code class="font-mono text-xs px-1.5 py-0.5 rounded bg-white/[0.06]">/lot/&lt;id&gt;</code></li>
+          <li>при успехе — <span class="text-success font-semibold">share_verified=TRUE</span>, ставка засчитана</li>
+          <li>при провале — 3 ретрая с задержками 1с / 5с / 30с, потом отклонение</li>
+        </ol>
+        <p class="text-xs text-muted mt-3">Удалили пост после ставки → ставка аннулируется при следующей проверке.</p>
+      </div>
+
+      <div class="cyber-card p-6">
+        <span class="pill pill-amber-soft mb-3"><iconify-icon icon="lucide:timer-reset"></iconify-icon><span>Анти-снайпинг</span></span>
+        <h3 class="heading text-lg font-bold mb-3 mt-2">Защита от поздних ставок</h3>
+        <p class="text-sm leading-relaxed text-white mb-2">Если ставка сделана в последние <strong class="text-amber">3 минуты</strong> до конца торгов:</p>
+        <ul class="text-sm leading-relaxed text-white space-y-1 ml-4" style="list-style:disc;">
+          <li>таймер автоматически продлевается на <strong>180 секунд</strong></li>
+          <li>все участники получают уведомление о продлении в реальном времени</li>
+          <li>в чате лота появляется событие <span class="font-mono text-xs px-1.5 py-0.5 rounded bg-white/[0.06]">timer_extended</span></li>
+        </ul>
+        <p class="text-sm leading-relaxed text-white mt-3">Это значит: невозможно «перехватить» лот ставкой за секунду до конца — у других участников всегда будет время ответить.</p>
+      </div>
+
+      <div class="cyber-card p-6">
+        <span class="pill pill-violet-soft mb-3"><iconify-icon icon="lucide:layers" class="text-violet"></iconify-icon><span>Каскад платежей</span></span>
+        <h3 class="heading text-lg font-bold mb-3 mt-2">Что если победитель не оплатил</h3>
+        <p class="text-sm leading-relaxed text-white mb-2">У победителя есть 24 часа на оплату. Если он не успел:</p>
+        <ol class="text-sm leading-relaxed text-white space-y-1 ml-4" style="list-style:decimal;">
+          <li>лот переходит ко <strong>второму</strong> по сумме биддеру</li>
+          <li>таймер оплаты у него — те же 24 часа</li>
+          <li>не оплатил и он → переходит к третьему, и так далее</li>
+          <li>если каскад исчерпан — лот выставляется заново через 24 часа</li>
+        </ol>
+        <p class="text-xs text-muted mt-3">Каждое движение каскада фиксируется в чате с продавцом и в логе событий лота.</p>
+      </div>
+
+      <div class="cyber-card p-6">
+        <span class="pill pill-violet-soft mb-3"><iconify-icon icon="lucide:wallet"></iconify-icon><span>Баланс и эскроу</span></span>
+        <h3 class="heading text-lg font-bold mb-3 mt-2">Как движутся деньги</h3>
+        <ol class="text-sm leading-relaxed text-white space-y-1 ml-4" style="list-style:decimal;">
+          <li>Покупатель пополняет баланс картой или счётом</li>
+          <li>При ставке сумма блокируется (эскроу)</li>
+          <li>Если перебили — сумма разблокируется автоматически</li>
+          <li>Если выиграли — после оплаты деньги остаются в эскроу до подтверждения билета</li>
+          <li>После подтверждения — выплата продавцу минус 10% комиссии</li>
+        </ol>
+        <p class="text-xs text-muted mt-3">Все движения видны в Профиль → «Эскроу и платежи».</p>
+      </div>
+
+      <div class="cyber-card p-6">
+        <span class="pill mb-3"><iconify-icon icon="lucide:globe"></iconify-icon><span>Валюты и провайдеры</span></span>
+        <h3 class="heading text-lg font-bold mb-3 mt-2">Мульти-валюта по странам</h3>
+        <ul class="text-sm leading-relaxed text-white space-y-2">
+          <li class="flex justify-between items-center gap-3"><span class="inline-flex items-center gap-2"><iconify-icon icon="lucide:flag" class="text-amber"></iconify-icon>Армения</span><span class="font-bold">AMD · IDram</span></li>
+          <li class="flex justify-between items-center gap-3"><span class="inline-flex items-center gap-2"><iconify-icon icon="lucide:flag" class="text-violet"></iconify-icon>Россия</span><span class="font-bold">RUB · YooKassa</span></li>
+          <li class="flex justify-between items-center gap-3"><span class="inline-flex items-center gap-2"><iconify-icon icon="lucide:globe"></iconify-icon>Другие</span><span class="font-bold">USD · Stripe</span></li>
+        </ul>
+        <p class="text-xs text-muted mt-3">Курсы тянутся с exchangerate-api.com, кэш 1 час, фолбэк AMD=390, RUB=90.</p>
+      </div>
+
+      <div class="cyber-card p-6">
+        <span class="pill pill-violet-soft mb-3"><iconify-icon icon="lucide:radio"></iconify-icon><span>Реалтайм</span></span>
+        <h3 class="heading text-lg font-bold mb-3 mt-2">WebSocket-обновления</h3>
+        <p class="text-sm leading-relaxed text-white mb-2">Все события идут в реальном времени без перезагрузки страницы:</p>
+        <ul class="text-sm leading-relaxed text-white space-y-1 ml-4" style="list-style:disc;">
+          <li>новая ставка → обновление цены и счётчика</li>
+          <li>продление таймера → подсветка</li>
+          <li>завершение лота → переход в статус «Ended»</li>
+          <li>сообщение в чате → пуш в шапке колокольчиком</li>
+          <li>счётчик зрителей лота — кто сейчас смотрит</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- БЕЗОПАСНОСТЬ -->
+  <section id="safety" class="mb-12">
+    <div class="mb-5 flex items-center gap-3">
+      <iconify-icon icon="lucide:shield-check" class="text-2xl text-success"></iconify-icon>
+      <h2 class="heading text-2xl font-bold sm:text-3xl">Безопасность сделки</h2>
+    </div>
+
+    <div class="cyber-card p-6 sm:p-8" style="background:linear-gradient(135deg,rgba(124,92,252,0.06) 0%,rgba(0,135,94,0.04) 100%);border-color:rgba(124,92,252,0.25);">
+      <div class="grid gap-6 md:grid-cols-3">
+        <div>
+          <iconify-icon icon="lucide:user-check" class="text-2xl text-violet mb-3"></iconify-icon>
+          <p class="text-sm font-bold uppercase tracking-wider text-violet mb-2">Защита покупателя</p>
+          <p class="text-sm leading-relaxed text-white">Эскроу-счёт удерживает оплату до момента, пока вы вручную не подтвердите получение билета. Если билет не пришёл — деньги вернутся вам.</p>
+        </div>
+        <div>
+          <iconify-icon icon="lucide:user-cog" class="text-2xl text-violet mb-3"></iconify-icon>
+          <p class="text-sm font-bold uppercase tracking-wider text-violet mb-2">Защита продавца</p>
+          <p class="text-sm leading-relaxed text-white">Каждая ставка верифицируется через шару в соцсети. Накрутка ставок невозможна — без публичного поста ставка не засчитывается.</p>
+        </div>
+        <div>
+          <iconify-icon icon="lucide:scale" class="text-2xl text-violet mb-3"></iconify-icon>
+          <p class="text-sm font-bold uppercase tracking-wider text-violet mb-2">Споры</p>
+          <p class="text-sm leading-relaxed text-white">При проблемах деньги остаются в эскроу до решения. Открыть спор можно из чата с продавцом — поддержка реагирует в течение часа.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="mb-12">
+    <div class="mb-5 flex items-center gap-3">
+      <iconify-icon icon="lucide:help-circle" class="text-2xl text-amber" style="filter:drop-shadow(0 0 8px var(--glow-gold));"></iconify-icon>
+      <h2 class="heading text-2xl font-bold sm:text-3xl">Частые вопросы</h2>
+    </div>
+
+    <div class="space-y-3">
+      <details class="cyber-card p-5 group">
+        <summary class="flex items-center justify-between cursor-pointer list-none">
+          <span class="font-bold text-base">Что если я не успею опубликовать пост?</span>
+          <iconify-icon icon="lucide:chevron-down" class="text-xl text-muted transition-transform group-open:rotate-180"></iconify-icon>
+        </summary>
+        <p class="mt-3 text-sm leading-relaxed text-white">Сначала публикуйте пост в соцсети, потом возвращайтесь и делайте ставку. Без рабочей ссылки на пост ставка отклоняется через минуту проверки.</p>
+      </details>
+
+      <details class="cyber-card p-5 group">
+        <summary class="flex items-center justify-between cursor-pointer list-none">
+          <span class="font-bold text-base">Можно ли отозвать ставку?</span>
+          <iconify-icon icon="lucide:chevron-down" class="text-xl text-muted transition-transform group-open:rotate-180"></iconify-icon>
+        </summary>
+        <p class="mt-3 text-sm leading-relaxed text-white">Нет, подтверждённую ставку отозвать нельзя. Но если вас перебивают — деньги автоматически разблокируются на балансе.</p>
+      </details>
+
+      <details class="cyber-card p-5 group">
+        <summary class="flex items-center justify-between cursor-pointer list-none">
+          <span class="font-bold text-base">Что считается «шарой» — закрытый или публичный пост?</span>
+          <iconify-icon icon="lucide:chevron-down" class="text-xl text-muted transition-transform group-open:rotate-180"></iconify-icon>
+        </summary>
+        <p class="mt-3 text-sm leading-relaxed text-white">Только публичный пост, доступный без авторизации. Закрытые/приватные посты система не сможет проверить и ставку отклонит.</p>
+      </details>
+
+      <details class="cyber-card p-5 group">
+        <summary class="flex items-center justify-between cursor-pointer list-none">
+          <span class="font-bold text-base">Какие соцсети поддерживаются?</span>
+          <iconify-icon icon="lucide:chevron-down" class="text-xl text-muted transition-transform group-open:rotate-180"></iconify-icon>
+        </summary>
+        <p class="mt-3 text-sm leading-relaxed text-white">VK, Telegram, X (Twitter), Facebook, OK.ru, Instagram, LinkedIn, Reddit, Pinterest. Ссылка должна вести на конкретный пост, не на профиль.</p>
+      </details>
+
+      <details class="cyber-card p-5 group">
+        <summary class="flex items-center justify-between cursor-pointer list-none">
+          <span class="font-bold text-base">Что если я не оплатил выигрыш в срок?</span>
+          <iconify-icon icon="lucide:chevron-down" class="text-xl text-muted transition-transform group-open:rotate-180"></iconify-icon>
+        </summary>
+        <p class="mt-3 text-sm leading-relaxed text-white">Лот по каскаду переходит ко второму биддеру. Вы получаете отметку в профиль о неоплате — это влияет на доверие. Заблокированная сумма возвращается на баланс.</p>
+      </details>
+
+      <details class="cyber-card p-5 group">
+        <summary class="flex items-center justify-between cursor-pointer list-none">
+          <span class="font-bold text-base">Как пополнить баланс?</span>
+          <iconify-icon icon="lucide:chevron-down" class="text-xl text-muted transition-transform group-open:rotate-180"></iconify-icon>
+        </summary>
+        <p class="mt-3 text-sm leading-relaxed text-white">Профиль → блок «Баланс» → «Пополнить». Сумма списывается с привязанной карты через провайдер вашей страны: IDram (AM), YooKassa (RU), Stripe (другие).</p>
+      </details>
+
+      <details class="cyber-card p-5 group">
+        <summary class="flex items-center justify-between cursor-pointer list-none">
+          <span class="font-bold text-base">Можно ли продавать без статуса юр.лица?</span>
+          <iconify-icon icon="lucide:chevron-down" class="text-xl text-muted transition-transform group-open:rotate-180"></iconify-icon>
+        </summary>
+        <p class="mt-3 text-sm leading-relaxed text-white">Да, в дев-сборке любой пользователь может выставить лот. В прод-версии планируется верификация через паспорт/ИНН для защиты покупателей.</p>
+      </details>
+
+      <details class="cyber-card p-5 group">
+        <summary class="flex items-center justify-between cursor-pointer list-none">
+          <span class="font-bold text-base">Что значит «Featured» и стоит ли платить за него?</span>
+          <iconify-icon icon="lucide:chevron-down" class="text-xl text-muted transition-transform group-open:rotate-180"></iconify-icon>
+        </summary>
+        <p class="mt-3 text-sm leading-relaxed text-white">Featured — это размещение в карусели «Топ» на главной с приоритетом перед обычным каталогом. Имеет смысл для лотов с высокой стартовой ценой ($100+) и редких событий — там окупается за счёт большего числа ставок.</p>
+      </details>
+    </div>
+  </section>
+
+  <!-- CTA внизу -->
+  <section class="cyber-card p-6 sm:p-8 text-center" style="background:linear-gradient(135deg,rgba(124,92,252,0.10) 0%,rgba(240,165,0,0.08) 100%);border-color:rgba(240,165,0,0.32);">
+    <h3 class="heading text-2xl font-bold mb-3">
+      <span class="hero-word-violet">Готовы</span> <span class="hero-word-gold">торговаться?</span>
+    </h3>
+    <p class="text-sm text-white max-w-md mx-auto mb-6">Откройте первый лот, опубликуйте шару и сделайте ставку. Дальше система сама всё сделает.</p>
+    <div class="flex flex-wrap gap-3 justify-center">
+      <a href="/" class="btn btn-violet">
+        <iconify-icon icon="lucide:home" class="text-base"></iconify-icon>
+        <span data-i18n="how.toHome">К каталогу</span>
+      </a>
+      {% if not me %}
+      <a href="/auth/register" class="btn btn-amber">
+        <iconify-icon icon="lucide:user-plus" class="text-base"></iconify-icon>
+        <span data-i18n="how.signup">Создать аккаунт</span>
+      </a>
+      <a href="/auth/dev" class="btn btn-ghost">
+        <iconify-icon icon="lucide:zap" class="text-base"></iconify-icon>
+        <span>Демо-вход</span>
+      </a>
+      {% else %}
+      <a href="/sell" class="btn btn-amber">
+        <iconify-icon icon="lucide:plus" class="text-base"></iconify-icon>
+        <span data-i18n="how.listLot">Выставить лот</span>
+      </a>
+      {% endif %}
+    </div>
+  </section>
 </main>
+
+<style>
+  /* Якорная навигация — плавный скролл */
+  html { scroll-behavior: smooth; }
+  /* details / FAQ */
+  details > summary::-webkit-details-marker { display: none; }
+  details > summary { user-select: none; }
+  details[open] > summary { margin-bottom: 0.5rem; }
+</style>
 {% endblock %}

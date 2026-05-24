@@ -1121,6 +1121,73 @@ def hall_of_fame(conn):
         if row:
             awards['biggest_growth'] = dict(row)
 
+        # === ТОП-5 биддеров (по числу побед, тай-брейк по сумме) ===
+        cur.execute(
+            "SELECT u.id, u.username, COUNT(DISTINCT l.id) AS won_count, "
+            "COALESCE(SUM(p.amount_usd), 0) AS total_spent "
+            "FROM users u "
+            "JOIN lots l ON l.winner_id = u.id "
+            "LEFT JOIN payments p ON p.user_id = u.id AND p.status = 'paid' "
+            "GROUP BY u.id, u.username "
+            "ORDER BY won_count DESC, total_spent DESC LIMIT 5"
+        )
+        awards['top_buyers_list'] = [dict(r) for r in cur.fetchall()]
+
+        # === ТОП-5 продавцов ===
+        cur.execute(
+            "SELECT u.id, u.username, COUNT(*) AS sold_count, "
+            "COALESCE(SUM(p.amount_usd), 0) AS gmv "
+            "FROM lots l "
+            "JOIN users u ON u.id = l.seller_id "
+            "LEFT JOIN bids b ON b.lot_id = l.id AND b.share_verified = TRUE "
+            "LEFT JOIN payments p ON p.bid_id = b.id AND p.status = 'paid' "
+            "WHERE l.status = 'ended' AND l.winner_id IS NOT NULL "
+            "GROUP BY u.id, u.username "
+            "ORDER BY sold_count DESC, gmv DESC LIMIT 5"
+        )
+        awards['top_sellers_list'] = [dict(r) for r in cur.fetchall()]
+
+        # === ТОП-5 самых дорогих лотов ===
+        cur.execute(
+            "SELECT l.id, l.title, l.artist, l.lot_type, l.image_url, l.status, "
+            "COALESCE(MAX(b.amount_usd), l.start_price_usd) AS final_price_usd, "
+            "COUNT(b.id) AS bids_count "
+            "FROM lots l LEFT JOIN bids b ON b.lot_id = l.id AND b.share_verified = TRUE "
+            "WHERE l.status IN ('ended', 'active') "
+            "GROUP BY l.id "
+            "ORDER BY final_price_usd DESC LIMIT 5"
+        )
+        awards['top_lots_list'] = [dict(r) for r in cur.fetchall()]
+
+        # === Битва дня — активный лот с максимумом ставок ===
+        cur.execute(
+            "SELECT l.id, l.title, l.artist, l.lot_type, l.image_url, l.end_time, l.start_price_usd, "
+            "COALESCE(MAX(b.amount_usd), l.start_price_usd) AS current_price, "
+            "COUNT(b.id) AS bid_count, "
+            "COUNT(DISTINCT b.user_id) AS bidders_count "
+            "FROM lots l LEFT JOIN bids b ON b.lot_id = l.id AND b.share_verified = TRUE "
+            "WHERE l.status = 'active' AND l.end_time > NOW() "
+            "GROUP BY l.id "
+            "ORDER BY bid_count DESC, current_price DESC LIMIT 1"
+        )
+        row = cur.fetchone()
+        if row:
+            awards['battle_of_the_day'] = dict(row)
+
+        # === Глобальная статистика платформы ===
+        cur.execute(
+            "SELECT "
+            "(SELECT COUNT(*) FROM lots) AS total_lots, "
+            "(SELECT COUNT(*) FROM lots WHERE status = 'active') AS active_lots, "
+            "(SELECT COUNT(*) FROM lots WHERE status = 'ended') AS ended_lots, "
+            "(SELECT COUNT(*) FROM bids WHERE share_verified = TRUE) AS total_bids, "
+            "(SELECT COUNT(DISTINCT user_id) FROM bids WHERE share_verified = TRUE) AS unique_bidders, "
+            "(SELECT COALESCE(SUM(amount_usd), 0) FROM payments WHERE status = 'paid') AS total_volume_usd, "
+            "(SELECT COUNT(*) FROM users) AS total_users"
+        )
+        stats_row = cur.fetchone()
+        awards['platform_stats'] = dict(stats_row) if stats_row else {}
+
     return awards
 
 
@@ -1292,3 +1359,47 @@ def list_user_chats(conn, user_id):
         rows = [dict(r) for r in cur.fetchall()]
     rows.sort(key=lambda r: r['last_at'], reverse=True)
     return rows
+
+
+def ensure_push_subscriptions_table(conn):
+    """Web Push: храним подписки браузеров (endpoint + p256dh + auth ключи)."""
+    with conn.cursor() as cur:
+        cur.execute(
+            "CREATE TABLE IF NOT EXISTS push_subscriptions ("
+            "id BIGSERIAL PRIMARY KEY, "
+            "user_id BIGINT REFERENCES users(id) ON DELETE CASCADE, "
+            "endpoint TEXT NOT NULL UNIQUE, "
+            "p256dh TEXT NOT NULL, "
+            "auth TEXT NOT NULL, "
+            "user_agent TEXT, "
+            "created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())"
+        )
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_push_user ON push_subscriptions (user_id)")
+
+
+def push_subscribe(conn, user_id, endpoint, p256dh, auth, user_agent=None):
+    with conn.cursor() as cur:
+        cur.execute(
+            "INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth, user_agent) "
+            "VALUES (%s, %s, %s, %s, %s) "
+            "ON CONFLICT (endpoint) DO UPDATE SET user_id = EXCLUDED.user_id, "
+            "p256dh = EXCLUDED.p256dh, auth = EXCLUDED.auth, user_agent = EXCLUDED.user_agent",
+            (user_id, endpoint, p256dh, auth, user_agent),
+        )
+
+
+def push_unsubscribe(conn, endpoint):
+    with conn.cursor() as cur:
+        cur.execute("DELETE FROM push_subscriptions WHERE endpoint = %s", (endpoint,))
+
+
+def get_user_push_subscriptions(conn, user_id):
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT endpoint, p256dh, auth FROM push_subscriptions WHERE user_id = %s",
+            (user_id,),
+        )
+        return [
+            {'endpoint': r[0], 'keys': {'p256dh': r[1], 'auth': r[2]}}
+            for r in cur.fetchall()
+        ]

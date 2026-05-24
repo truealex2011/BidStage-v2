@@ -14,7 +14,7 @@ const I18N = {
     'nav.home': 'Главная',
     'nav.active': 'Активные торги',
     'nav.how': 'Как работает',
-    'nav.hall': '🏆 Зал славы',
+    'nav.hall': 'Зал славы',
     'nav.sell': '+ Продать',
     'nav.profile': 'Профиль',
     'nav.chats': 'Чаты',
@@ -48,8 +48,8 @@ const I18N = {
     'lot.last': 'последние',
     'lot.bidsCount': 'ставок',
     'lot.minBid': 'Сделать ставку от',
-    'lot.feed': '📡 Лента событий',
-    'lot.podium': '🏆 Подиум',
+    'lot.feed': 'Лента событий',
+    'lot.podium': 'Подиум',
     'lot.share': 'Поделиться',
     'lot.rules': 'Правила',
     'lot.timer': 'До конца',
@@ -107,11 +107,11 @@ const I18N = {
     'hero.premium': 'ПРЕМИУМ',
     'hero.auction': 'АУКЦИОН',
     'hero.subtitle': 'Концертные лоты, VIP-столы и бэкстейдж-моменты в формате торгов в реальном времени. Чтобы ставка засчиталась — поделись лотом в соцсетях.',
-    'catalog.hotTitle': '🔥 Горящие лоты',
+    'catalog.hotTitle': 'Горящие лоты',
     'catalog.hotSubtitle': 'Заканчиваются скоро',
-    'catalog.topTitle': '⭐ Топ',
+    'catalog.topTitle': 'Топ',
     'catalog.topSubtitle': 'Продвинутые аукционы',
-    'catalog.topTitle': '⭐ Топ',
+    'catalog.topTitle': 'Топ',
     'catalog.topSubtitle': 'Продвинутые аукционы',
     'catalog.title': 'Каталог',
     'catalog.subtitle': 'Концертные лоты',
@@ -122,13 +122,13 @@ const I18N = {
     'modal.minimum': 'Минимум',
     'modal.continue': 'Продолжить',
     'modal.manual': 'Ручная',
-    'modal.autobid': '⚡ Автоставка',
-    'modal.autobidHint': '⚡ Автоставка: система автоматически перебивает соперников до этой суммы.',
+    'modal.autobid': 'Автоставка',
+    'modal.autobidHint': 'Автоставка: система автоматически перебивает соперников до этой суммы.',
     'modal.bidAmount': 'Сумма ставки',
     'modal.plus1step': '+1 шаг',
     'modal.plus3steps': '+3 шага',
     'modal.plus5steps': '+5 шагов',
-    'chat.title': '💬 Чат с продавцом',
+    'chat.title': 'Чат с продавцом',
     'chat.loading': 'Загрузка...',
     'sell.image': 'Картинка лота',
     'sell.imageDrop': 'Перетащите картинку или нажмите',
@@ -139,15 +139,15 @@ const I18N = {
     'rules.share': 'Поделитесь лотом в VK/FB',
     'rules.keepPost': 'Не удаляйте пост до конца',
     'rules.payIn24h': 'Оплатите выигрыш за 24 ч',
-    'hall.eyebrow': '🏆 Hall of fame',
+    'hall.eyebrow': 'Hall of fame',
     'hall.title': 'Зал славы',
     'hall.subtitle': 'Лучшие лоты, самые упорные биддеры и легендарные битвы платформы.',
-    'hall.mostExpensive': '💎 Самый дорогой',
-    'hall.hardestBattle': '⚔️ Самая упорная битва',
-    'hall.biggestGrowth': '📈 Максимальный рост',
-    'hall.topBuyer': '👑 Король покупателей',
-    'hall.topSeller': '⭐ Топ продавец',
-    'hall.mostPersistent': '🔥 Самый настойчивый',
+    'hall.mostExpensive': 'Самый дорогой',
+    'hall.hardestBattle': 'Самая упорная битва',
+    'hall.biggestGrowth': 'Максимальный рост',
+    'hall.topBuyer': 'Король покупателей',
+    'hall.topSeller': 'Топ продавец',
+    'hall.mostPersistent': 'Самый настойчивый',
     'hall.openLot': 'Открыть лот',
     'hall.bidsMade': 'ставок сделано',
     'hall.wins': 'побед',
@@ -188,10 +188,10 @@ const I18N = {
     'sell.dur1h': '1 час (тест)', 'sell.dur24h': '24 часа', 'sell.dur2d': '2 дня', 'sell.dur3d': '3 дня', 'sell.dur1w': '1 неделя', 'sell.dur2w': '2 недели', 'sell.durCustom': 'Свой вариант…',
     'sell.feature': 'Поднять в топ', 'sell.featureBody': 'Лот будет показываться в начале каталога с бейджем «Featured». Привлекает в 3-5 раз больше ставок.',
     'sell.publish': 'Опубликовать',
-    'sell.yourBalance': 'Ваш баланс', 'sell.inEscrow': '🔒 В эскроу', 'sell.escrowHint': 'Поступит после подтверждения покупателей',
+    'sell.yourBalance': 'Ваш баланс', 'sell.inEscrow': 'В эскроу', 'sell.escrowHint': 'Поступит после подтверждения покупателей',
     'sell.topup': 'Пополнить',
     'sell.myAuctions': 'Мои аукционы', 'sell.lotHistory': 'История лотов', 'sell.fees': 'Тарифы',
-    'sell.escrowSection': '🔒 Эскроу', 'sell.escrowDeals': 'Сделки в обработке',
+    'sell.escrowSection': 'Эскроу', 'sell.escrowDeals': 'Сделки в обработке',
     'sell.escrowDealsHint': 'Отправьте билет покупателю. Деньги поступят на ваш баланс после подтверждения получения.',
     'profile.awaitsPayment': 'Ожидает оплаты',
     'profile.youWon': 'Вы выиграли · оплатите выигрыш',
@@ -203,7 +203,7 @@ const I18N = {
     'nav.home': 'Home',
     'nav.active': 'Live auctions',
     'nav.how': 'How it works',
-    'nav.hall': '🏆 Hall of fame',
+    'nav.hall': 'Hall of fame',
     'nav.sell': '+ Sell',
     'nav.profile': 'Profile',
     'nav.chats': 'Chats',
@@ -237,8 +237,8 @@ const I18N = {
     'lot.last': 'latest',
     'lot.bidsCount': 'bids',
     'lot.minBid': 'Bid from',
-    'lot.feed': '📡 Live feed',
-    'lot.podium': '🏆 Podium',
+    'lot.feed': 'Live feed',
+    'lot.podium': 'Podium',
     'lot.share': 'Share',
     'lot.rules': 'Rules',
     'lot.timer': 'Ends in',
@@ -296,11 +296,11 @@ const I18N = {
     'hero.premium': 'PREMIUM',
     'hero.auction': 'AUCTION',
     'hero.subtitle': 'Concert lots, VIP tables and backstage moments — bid in real time. To make a bid count, share the lot on social media.',
-    'catalog.hotTitle': '🔥 Hot lots',
+    'catalog.hotTitle': 'Hot lots',
     'catalog.hotSubtitle': 'Ending soon',
-    'catalog.topTitle': '⭐ Top',
+    'catalog.topTitle': 'Top',
     'catalog.topSubtitle': 'Featured auctions',
-    'catalog.topTitle': '⭐ Top',
+    'catalog.topTitle': 'Top',
     'catalog.topSubtitle': 'Featured auctions',
     'catalog.title': 'Catalogue',
     'catalog.subtitle': 'Concert lots',
@@ -311,13 +311,13 @@ const I18N = {
     'modal.minimum': 'Minimum',
     'modal.continue': 'Continue',
     'modal.manual': 'Manual',
-    'modal.autobid': '⚡ Autobid',
-    'modal.autobidHint': '⚡ Autobid: system raises against rivals up to this amount.',
+    'modal.autobid': 'Autobid',
+    'modal.autobidHint': 'Autobid: system raises against rivals up to this amount.',
     'modal.bidAmount': 'Bid amount',
     'modal.plus1step': '+1 step',
     'modal.plus3steps': '+3 steps',
     'modal.plus5steps': '+5 steps',
-    'chat.title': '💬 Chat with seller',
+    'chat.title': 'Chat with seller',
     'chat.loading': 'Loading...',
     'sell.image': 'Lot image',
     'sell.imageDrop': 'Drop an image or click',
@@ -328,15 +328,15 @@ const I18N = {
     'rules.share': 'Share the lot on VK/FB',
     'rules.keepPost': 'Do not delete the post until the end',
     'rules.payIn24h': 'Pay the winning bid within 24h',
-    'hall.eyebrow': '🏆 Hall of fame',
+    'hall.eyebrow': 'Hall of fame',
     'hall.title': 'Hall of fame',
     'hall.subtitle': 'Best lots, most determined bidders and legendary battles of the platform.',
-    'hall.mostExpensive': '💎 Most expensive',
-    'hall.hardestBattle': '⚔️ Toughest battle',
-    'hall.biggestGrowth': '📈 Biggest growth',
-    'hall.topBuyer': '👑 Top buyer',
-    'hall.topSeller': '⭐ Top seller',
-    'hall.mostPersistent': '🔥 Most persistent',
+    'hall.mostExpensive': 'Most expensive',
+    'hall.hardestBattle': 'Toughest battle',
+    'hall.biggestGrowth': 'Biggest growth',
+    'hall.topBuyer': 'Top buyer',
+    'hall.topSeller': 'Top seller',
+    'hall.mostPersistent': 'Most persistent',
     'hall.openLot': 'Open lot',
     'hall.bidsMade': 'bids made',
     'hall.wins': 'wins',
@@ -377,10 +377,10 @@ const I18N = {
     'sell.dur1h': '1 hour (test)', 'sell.dur24h': '24 hours', 'sell.dur2d': '2 days', 'sell.dur3d': '3 days', 'sell.dur1w': '1 week', 'sell.dur2w': '2 weeks', 'sell.durCustom': 'Custom…',
     'sell.feature': 'Feature on top', 'sell.featureBody': 'The lot is shown at the top of the catalogue with a Featured badge. Attracts 3–5× more bids.',
     'sell.publish': 'Publish',
-    'sell.yourBalance': 'Your balance', 'sell.inEscrow': '🔒 In escrow', 'sell.escrowHint': 'Released after buyers confirm delivery',
+    'sell.yourBalance': 'Your balance', 'sell.inEscrow': 'In escrow', 'sell.escrowHint': 'Released after buyers confirm delivery',
     'sell.topup': 'Top up',
     'sell.myAuctions': 'My auctions', 'sell.lotHistory': 'Lot history', 'sell.fees': 'Fees',
-    'sell.escrowSection': '🔒 Escrow', 'sell.escrowDeals': 'Deals in progress',
+    'sell.escrowSection': 'Escrow', 'sell.escrowDeals': 'Deals in progress',
     'sell.escrowDealsHint': 'Send the ticket to the buyer. Funds land on your balance once they confirm.',
     'profile.awaitsPayment': 'Awaiting payment',
     'profile.youWon': 'You won · pay the winning bid',
@@ -392,7 +392,7 @@ const I18N = {
     'nav.home': 'Գլխավոր',
     'nav.active': 'Ակտիվ աճուրդներ',
     'nav.how': 'Ինչպես է աշխատում',
-    'nav.hall': '🏆 Փառքի սրահ',
+    'nav.hall': 'Փառքի սրահ',
     'nav.sell': '+ Վաճառել',
     'nav.profile': 'Պրոֆիլ',
     'nav.chats': 'Չաթեր',
@@ -426,8 +426,8 @@ const I18N = {
     'lot.last': 'վերջին',
     'lot.bidsCount': 'առաջարկ',
     'lot.minBid': 'Առաջարկ-ից',
-    'lot.feed': '📡 Կենդանի հոսք',
-    'lot.podium': '🏆 Պատվանդան',
+    'lot.feed': 'Կենդանի հոսք',
+    'lot.podium': 'Պատվանդան',
     'lot.share': 'Կիսվել',
     'lot.rules': 'Կանոններ',
     'lot.timer': 'Մինչ ավարտ',
@@ -485,11 +485,11 @@ const I18N = {
     'hero.premium': 'ՊՐԵՄԻՈՒՄ',
     'hero.auction': 'ԱՃՈՒՐԴ',
     'hero.subtitle': 'Համերգային լոտեր, VIP սեղաններ և բեքսթեյջ պահեր՝ իրական ժամանակում աճուրդի ձևաչափով: Որպեսզի առաջարկը ուժի մեջ մտնի, կիսվեք լոտով սոցցանցում:',
-    'catalog.hotTitle': '🔥 Թեժ լոտեր',
+    'catalog.hotTitle': 'Թեժ լոտեր',
     'catalog.hotSubtitle': 'Շուտով ավարտ',
-    'catalog.topTitle': '⭐ Թոփ',
+    'catalog.topTitle': 'Թոփ',
     'catalog.topSubtitle': 'Առաջխաղացված աճուրդներ',
-    'catalog.topTitle': '⭐ Թոփ',
+    'catalog.topTitle': 'Թոփ',
     'catalog.topSubtitle': 'Առաջատար աճուրդներ',
     'catalog.title': 'Կատալոգ',
     'catalog.subtitle': 'Համերգային լոտեր',
@@ -500,13 +500,13 @@ const I18N = {
     'modal.minimum': 'Նվազ.',
     'modal.continue': 'Շարունակել',
     'modal.manual': 'Ձեռքով',
-    'modal.autobid': '⚡ Ավտոառաջարկ',
-    'modal.autobidHint': '⚡ Ավտոառաջարկ. համակարգն ավտոմատ բարձրացնում է մինչև այս գումարը.',
+    'modal.autobid': 'Ավտոառաջարկ',
+    'modal.autobidHint': 'Ավտոառաջարկ. համակարգն ավտոմատ բարձրացնում է մինչև այս գումարը.',
     'modal.bidAmount': 'Առաջարկի գումար',
     'modal.plus1step': '+1 քայլ',
     'modal.plus3steps': '+3 քայլ',
     'modal.plus5steps': '+5 քայլ',
-    'chat.title': '💬 Չատ վաճառողի հետ',
+    'chat.title': 'Չատ վաճառողի հետ',
     'chat.loading': 'Բեռնում...',
     'sell.image': 'Լոտի նկար',
     'sell.imageDrop': 'Տեղադրեք նկարը կամ սեղմեք',
@@ -517,15 +517,15 @@ const I18N = {
     'rules.share': 'Կիսվեք լոտով VK/FB-ում',
     'rules.keepPost': 'Մի ջնջեք գրառումը մինչ վերջ',
     'rules.payIn24h': 'Վճարեք շահումը 24 ժամում',
-    'hall.eyebrow': '🏆 Փառքի սրահ',
+    'hall.eyebrow': 'Փառքի սրահ',
     'hall.title': 'Փառքի սրահ',
     'hall.subtitle': 'Լավագույն լոտերը, ամենահամառ առաջարկողները և լեգենդար ճակատամարտերը:',
-    'hall.mostExpensive': '💎 Ամենաթանկը',
-    'hall.hardestBattle': '⚔️ Ամենադաժան ճակատամարտը',
-    'hall.biggestGrowth': '📈 Առավելագույն աճ',
-    'hall.topBuyer': '👑 Թագավոր գնորդ',
-    'hall.topSeller': '⭐ Թոփ վաճառող',
-    'hall.mostPersistent': '🔥 Ամենահամառը',
+    'hall.mostExpensive': 'Ամենաթանկը',
+    'hall.hardestBattle': 'Ամենադաժան ճակատամարտը',
+    'hall.biggestGrowth': 'Առավելագույն աճ',
+    'hall.topBuyer': 'Թագավոր գնորդ',
+    'hall.topSeller': 'Թոփ վաճառող',
+    'hall.mostPersistent': 'Ամենահամառը',
     'hall.openLot': 'Բացել լոտը',
     'hall.bidsMade': 'առաջարկ արված է',
     'hall.wins': 'հաղթանակ',
@@ -566,10 +566,10 @@ const I18N = {
     'sell.dur1h': '1 ժամ (թեստ)', 'sell.dur24h': '24 ժամ', 'sell.dur2d': '2 օր', 'sell.dur3d': '3 օր', 'sell.dur1w': '1 շաբաթ', 'sell.dur2w': '2 շաբաթ', 'sell.durCustom': 'Սեփական…',
     'sell.feature': 'Բարձրացնել', 'sell.featureBody': 'Լոտը ցուցադրվում է կատալոգի սկզբում Featured նշանով: Գրավում է 3–5× ավելի առաջարկներ:',
     'sell.publish': 'Հրապարակել',
-    'sell.yourBalance': 'Ձեր մնացորդը', 'sell.inEscrow': '🔒 Էսքրոուում', 'sell.escrowHint': 'Կհաշվեգրվի գնորդների հաստատումից հետո',
+    'sell.yourBalance': 'Ձեր մնացորդը', 'sell.inEscrow': 'Էսքրոուում', 'sell.escrowHint': 'Կհաշվեգրվի գնորդների հաստատումից հետո',
     'sell.topup': 'Համալրել',
     'sell.myAuctions': 'Իմ աճուրդները', 'sell.lotHistory': 'Լոտերի պատմություն', 'sell.fees': 'Վճարներ',
-    'sell.escrowSection': '🔒 Էսքրոու', 'sell.escrowDeals': 'Ընթացիկ գործարքներ',
+    'sell.escrowSection': 'Էսքրոու', 'sell.escrowDeals': 'Ընթացիկ գործարքներ',
     'sell.escrowDealsHint': 'Ուղարկեք տոմսը գնորդին: Գումարը կհաշվեգրվի մնացորդին հաստատումից հետո:',
     'profile.awaitsPayment': 'Սպասում է վճարման',
     'profile.youWon': 'Դուք հաղթեցիք · վճարեք',
@@ -833,12 +833,18 @@ document.querySelectorAll('.filter-btn').forEach((btn) => {
 
 const now = Date.now();
 document.querySelectorAll('[data-lot-id]').forEach((card) => {
-  if (card.dataset.endTs) {
-    card.dataset.targetTime = card.dataset.endTs;
+  // Treat "0" / пусто как missing — иначе таймер залипает в 00:00:00 для лотов с битым end_ts
+  const endTsRaw = Number(card.dataset.endTs || 0);
+  if (endTsRaw > 0) {
+    card.dataset.targetTime = String(endTsRaw);
   } else if (card.dataset.endOffset) {
-    card.dataset.targetTime = now + Number(card.dataset.endOffset) * 1000;
+    const offset = Number(card.dataset.endOffset) * 1000;
+    if (offset > 0) {
+      card.dataset.targetTime = String(now + offset);
+      card.dataset.endTs = String(now + offset);
+    }
   }
-  if (card.dataset.startOffset) card.dataset.targetTime = now + Number(card.dataset.startOffset) * 1000;
+  if (card.dataset.startOffset) card.dataset.targetTime = String(now + Number(card.dataset.startOffset) * 1000);
 });
 
 const formatDuration = (ms) => {
@@ -871,6 +877,9 @@ const updateTimers = () => {
     if (timer.textContent !== value) {
       timer.textContent = value;
       timer.dataset.text = value;
+      timer.classList.remove('timer-flip');
+      void timer.offsetWidth;
+      timer.classList.add('timer-flip');
     }
     if (remaining < 60_000 && remaining > 0) {
       timer.classList.add('timer-final-min');
@@ -1046,7 +1055,7 @@ function validateBidStep1() {
   const minUsd = getMinUsd();
   const continueBtn = document.getElementById('continue-share');
   if (amountUsd < minUsd - 0.001) {
-    showStep1Error(t('bid.tooLow') + ': ' + formatMoney(minUsd, currentCurrency));
+    showStep1Error(t('bid.tooLow') + ': '+ formatMoney(minUsd, currentCurrency));
     if (continueBtn) continueBtn.disabled = true;
     return false;
   }
@@ -1057,7 +1066,7 @@ function validateBidStep1() {
   }
   const balance = getBalanceUsd();
   if (balance !== null && amountUsd > balance + 0.001) {
-    showStep1Error(t('bid.insufficientFunds') + ': ' + formatMoney(balance, currentCurrency));
+    showStep1Error(t('bid.insufficientFunds') + ': '+ formatMoney(balance, currentCurrency));
     if (continueBtn) continueBtn.disabled = true;
     return false;
   }
@@ -1073,7 +1082,7 @@ function refreshBidUnit() {
     const minDisplay = document.querySelector('[data-min-display]');
     const minUsd = getMinUsd();
     if (minDisplay) minDisplay.textContent = formatMoney(minUsd, currentCurrency);
-    if (minimumBid) minimumBid.textContent = t('bid.minimum') + ': ' + formatMoney(minUsd, currentCurrency);
+    if (minimumBid) minimumBid.textContent = t('bid.minimum') + ': '+ formatMoney(minUsd, currentCurrency);
   }
 }
 
@@ -1325,12 +1334,12 @@ function addInstantBidToHistory({ bid_id, amount_usd, username, verified }) {
       </div>
       <div class="text-right">
         <p class="text-base font-bold">$${amount_usd.toFixed(0)}</p>
-        <span class="pill ${verified ? 'pill-success' : 'pill-amber-soft'}" style="font-size:0.6rem;padding:0.15rem 0.4rem;">${verified ? '✓ подтверждена' : '⏳ проверка шары'}</span>
+        <span class="pill ${verified ? 'pill-success' : 'pill-amber-soft'}" style="font-size:0.6rem;padding:0.15rem 0.4rem;">${verified ? ' подтверждена' : '⏳ проверка шары'}</span>
       </div>`;
     history.insertBefore(item, history.firstChild);
   }
   if (typeof window.addFeedItem === 'function') {
-    window.addFeedItem('⚡', `<strong>${username}</strong> поставил <strong>$${amount_usd.toFixed(0)}</strong>`, 'bid');
+    window.addFeedItem('', `<strong>${username}</strong> поставил <strong>$${amount_usd.toFixed(0)}</strong>`, 'bid');
   }
   const total = document.getElementById('stat-total');
   if (total) total.textContent = String(Number(total.textContent || 0) + 1);
@@ -1472,11 +1481,32 @@ if (typeof io !== 'undefined') {
         const lotId = Number(card.dataset.lotId);
         if (lotId) socket.emit('join_lot', { lot_id: lotId });
       });
+      // Подтянуть актуальный online через REST как fallback
+      fetch('/api/online').then((r) => r.ok ? r.json() : null).then((d) => {
+        if (d && typeof d.count === 'number') {
+          const ev = { count: d.count };
+          // Триггерим тот же handler через ручной emit на DOM
+          document.querySelectorAll('[data-online-count]').forEach((el) => { el.textContent = String(d.count); });
+          const pill = document.getElementById('bs-online-pill');
+          if (pill) pill.style.display = d.count > 0 ? '' : 'none';
+        }
+      }).catch(() => {});
     });
     socket.on('online_count', (payload) => {
+      const count = payload && payload.count !== undefined ? Number(payload.count) : 0;
       document.querySelectorAll('[data-online-count]').forEach((el) => {
-        if (payload && payload.count !== undefined) el.textContent = payload.count;
+        el.textContent = String(count);
       });
+      const pill = document.getElementById('bs-online-pill');
+      if (pill) {
+        pill.style.display = count > 0 ? '' : 'none';
+        if (count > 0 && !pill.dataset.shown) {
+          pill.dataset.shown = '1';
+          pill.style.opacity = '0';
+          pill.style.transition = 'opacity 0.4s ease';
+          requestAnimationFrame(() => { pill.style.opacity = '1'; });
+        }
+      }
     });
     socket.on('lot_viewers', (payload) => {
       if (!payload) return;
@@ -1487,6 +1517,20 @@ if (typeof io !== 'undefined') {
         }
       });
     });
+    function pushLiveFeed(html) {
+      const feed = document.getElementById('live-feed');
+      if (!feed) return;
+      const placeholder = feed.querySelector('p.text-muted.text-center');
+      if (placeholder) placeholder.remove();
+      const row = document.createElement('div');
+      row.className = 'bid-slide-in flex items-center justify-between gap-3 rounded px-3 py-2 text-sm';
+      row.style.background = 'rgba(124,92,252,0.06)';
+      row.style.border = '1px solid rgba(124,92,252,0.18)';
+      row.innerHTML = html + '<span class="text-xs text-muted font-mono">' + new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + '</span>';
+      feed.insertBefore(row, feed.firstChild);
+      while (feed.children.length > 30) feed.removeChild(feed.lastChild);
+    }
+    window.bidstagePushLiveFeed = pushLiveFeed;
     socket.on('new_bid', (payload) => {
       addInstantBidToHistory({
         bid_id: payload.bid_id,
@@ -1494,6 +1538,7 @@ if (typeof io !== 'undefined') {
         username: payload.user || payload.username || 'участник',
         verified: false,
       });
+      pushLiveFeed('<span><span class="text-violet font-bold">' + (payload.user || 'участник') + '</span> поставил <span class="font-mono font-bold">' + formatMoney(Number(payload.amount_usd), currentCurrency) + '</span></span>');
       const text = `Новая ставка от ${payload.user}: ${formatMoney(Number(payload.amount_usd), currentCurrency)} (ожидает проверки)`;
       toast(text, 'good');
       if (window.bidstageNotifications && window.bidstageNotifications.pushPersistent) {
@@ -1521,7 +1566,7 @@ if (typeof io !== 'undefined') {
               pill.className = 'pill pill-success';
               pill.style.fontSize = '0.6rem';
               pill.style.padding = '0.15rem 0.4rem';
-              pill.textContent = '✓ подтверждена';
+              pill.textContent = ' подтверждена';
             }
             row.style.borderColor = 'rgba(255,255,255,0.06)';
           }
@@ -1551,9 +1596,11 @@ if (typeof io !== 'undefined') {
     });
     socket.on('timer_extended', (payload) => {
       extendLotTimer(payload.lot_id, payload.new_end_time);
+      if (window.bidstagePushLiveFeed) window.bidstagePushLiveFeed('<span>⏱ Анти-снайпинг: таймер продлён на <span class="text-amber font-bold">' + payload.extension_seconds + ' с</span></span>');
       toast(`Таймер продлён на лоте #${payload.lot_id}: +${payload.extension_seconds} сек`, 'good');
     });
     socket.on('auction_ended', (payload) => {
+      if (window.bidstagePushLiveFeed) window.bidstagePushLiveFeed('<span> Аукцион завершён</span>');
       toast(`Лот #${payload.lot_id} завершён.`, 'warn');
     });
     socket.on('new_top_bid', (payload) => {
@@ -1565,7 +1612,7 @@ if (typeof io !== 'undefined') {
       if (window.bidstageNotifications && window.bidstageNotifications.pushPersistent) {
         window.bidstageNotifications.pushPersistent({
           id: 'outbid-' + payload.lot_id + '-' + Date.now(),
-          title: '⚠️ Вашу ставку перебили',
+          title: ' Вашу ставку перебили',
           body: text + '. Откройте лот, чтобы увеличить ставку или включить автоставку.',
           lot_id: payload.lot_id,
         });
@@ -1608,7 +1655,7 @@ if (typeof io !== 'undefined') {
       if (window.bidstageNotifications && window.bidstageNotifications.pushPersistent) {
         window.bidstageNotifications.pushPersistent({
           id: 'ticket-' + payload.payment_id,
-          title: '🎫 Продавец отправил билет',
+          title: ' Продавец отправил билет',
           body: 'Лот «' + payload.lot_title + '».\nКод билета: ' + payload.ticket_code + '\n\nПроверьте билет, и если получили — нажмите «Я получил товар».',
           lot_id: payload.lot_id,
           payment_id: payload.payment_id,

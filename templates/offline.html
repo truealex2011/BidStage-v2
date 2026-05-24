@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Офлайн · BidStage{% endblock %}
+{% block content %}
+<main class="relative mx-auto max-w-[760px] px-6 py-16 text-center">
+  <iconify-icon icon="lucide:wifi-off" class="text-5xl text-amber" style="filter:drop-shadow(0 0 12px var(--glow-gold));"></iconify-icon>
+  <h1 class="heading mt-5 text-3xl font-bold sm:text-4xl">
+    <span class="hero-word-violet">Нет</span> <span class="hero-word-gold">сети</span>
+  </h1>
+  <p class="mt-3 text-sm text-muted">Похоже, интернет пропал. Когда вернётся — страница загрузится автоматически.</p>
+  <div class="mt-6 flex flex-wrap justify-center gap-3">
+    <a href="/" class="btn btn-violet">
+      <iconify-icon icon="lucide:home"></iconify-icon>
+      <span>На главную</span>
+    </a>
+    <button type="button" onclick="window.location.reload()" class="btn btn-ghost">
+      <iconify-icon icon="lucide:refresh-cw"></iconify-icon>
+      <span>Обновить</span>
+    </button>
+  </div>
+</main>
+{% endblock %}

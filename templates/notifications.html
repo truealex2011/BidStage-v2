@@ -1,11 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
 <main class="mx-auto max-w-3xl px-4 py-8 lg:px-12">
-  <div class="flex items-center justify-between mb-6">
+  <div class="flex items-center justify-between mb-8 page-hero-header page-hero-left" style="display:flex;flex-direction:row;align-items:center;justify-content:space-between;">
     <div>
-      <p class="text-xs font-bold uppercase tracking-wider text-violet">🔔 Центр уведомлений</p>
-      <h1 class="heading mt-1 text-2xl font-bold">Уведомления</h1>
-      <p class="text-sm text-muted mt-1">Все системные сообщения, итоги аукционов, статусы оплат и эскроу.</p>
+      <span class="hero-kicker"><span class="hero-kicker-bar"></span><span>Центр уведомлений</span></span>
+      <h1 class="page-hero-title" style="font-size:clamp(1.8rem,3vw,2.4rem);">
+        <span class="hero-word-violet">Уведо</span><span class="hero-word-gold">мления</span>
+      </h1>
+      <p class="page-hero-sub" style="text-align:left;margin-top:0.6rem;">Все системные сообщения, итоги аукционов, статусы оплат и эскроу.</p>
+    </div>
     </div>
     <button type="button" id="notif-mark-all" class="btn btn-violet btn-sm">Прочитать всё</button>
   </div>

@@ -10,7 +10,7 @@ from decimal import Decimal, InvalidOperation
 from urllib.parse import urlparse
 
 import psycopg2
-from flask import Blueprint, render_template, jsonify, request, redirect, session, abort, current_app
+from flask import Blueprint, render_template, jsonify, request, redirect, session, abort, current_app, send_from_directory
 
 import models
 import currency
@@ -99,7 +99,17 @@ def _build_lot_view(conn, raw_lot):
     current_price_usd_value = float(raw_lot.get('current_price_usd') or raw_lot.get('start_price_usd') or 0)
     current_price_amd = _amd_from_usd(current_price_usd_value)
     step_amd = _amd_from_usd(raw_lot['bid_step_usd'])
-    end_ts_ms = int(raw_lot['end_time'].timestamp() * 1000) if raw_lot.get('end_time') else 0
+    # end_ts_ms: основной путь — UNIX-ms из end_time; если по какой-то причине пусто
+    # (битая запись/search-роу без поля), делаем фолбэк через текущее время + offset.
+    end_ts_ms = 0
+    end_time = raw_lot.get('end_time')
+    if end_time is not None:
+        try:
+            end_ts_ms = int(end_time.timestamp() * 1000)
+        except Exception:
+            end_ts_ms = 0
+    if end_ts_ms <= 0 and end_offset > 0:
+        end_ts_ms = int(datetime.now(timezone.utc).timestamp() * 1000) + end_offset * 1000
     return {
         'id': int(raw_lot['id']),
         'title': raw_lot['title'],
@@ -118,7 +128,144 @@ def _build_lot_view(conn, raw_lot):
         'step_amd': step_amd,
         'bid_count': bid_count,
         'image_url': raw_lot.get('image_url'),
+        'layout': 's',
     }
+
+
+def _assign_catalog_layout(lots):
+    """Bento-раскладка со случайным распределением размеров.
+    XL и L раскладываются по разным частям списка, чтобы не стояли рядом.
+    Сам порядок лотов в списке тоже перемешивается случайно.
+    """
+    if not lots:
+        return lots
+    if len(lots) < 4:
+        for l in lots:
+            l['layout'] = 's'
+        return lots
+
+    import random as _rnd
+    rng = _rnd.Random()
+
+    def _has_image(l):
+        return bool(l.get('image_url'))
+
+    # Сначала перемешиваем сам список — порядок в DOM будет случайным
+    rng.shuffle(lots)
+
+    layout_map = {}
+    n = len(lots)
+
+    # Раздаём базовые размеры: 25% m, 55% s, 20% xs
+    for l in lots:
+        r = rng.random()
+        if r < 0.25:
+            layout_map[l['id']] = 'm'
+        elif r < 0.80:
+            layout_map[l['id']] = 's'
+        else:
+            layout_map[l['id']] = 'xs'
+
+    # XL и L идут только лотам с картинкой и далеко друг от друга
+    with_image_indices = [i for i, l in enumerate(lots) if _has_image(l)]
+    if with_image_indices:
+        # XL — случайный лот с картинкой из ПЕРВОЙ ТРЕТИ списка
+        third = max(1, n // 3)
+        xl_pool = [i for i in with_image_indices if i < third] or with_image_indices
+        xl_idx = rng.choice(xl_pool)
+        layout_map[lots[xl_idx]['id']] = 'xl'
+
+        # L — случайный лот с картинкой из ПОСЛЕДНЕЙ ТРЕТИ (далеко от XL)
+        l_pool = [i for i in with_image_indices if i >= 2 * third and i != xl_idx]
+        if not l_pool:
+            # fallback: любой с дистанцией от XL хотя бы 4
+            l_pool = [i for i in with_image_indices if abs(i - xl_idx) >= 4]
+        if not l_pool:
+            l_pool = [i for i in with_image_indices if i != xl_idx]
+        if l_pool:
+            l_idx = rng.choice(l_pool)
+            layout_map[lots[l_idx]['id']] = 'l'
+
+    for l in lots:
+        l['layout'] = layout_map.get(l['id'], 's')
+    return lots
+
+
+def _build_category_counts(lots):
+    """Подсчитывает сколько лотов в каждой категории (для табов)."""
+    counts = {'all': len(lots), 'tickets': 0, 'vip': 0, 'table': 0, 'hot': 0}
+    for l in lots:
+        t = l.get('lot_type') or 'tickets'
+        if t in counts:
+            counts[t] += 1
+        if (l.get('end_offset_seconds') or 0) < 3600 and l.get('status') == 'active':
+            counts['hot'] += 1
+    return counts
+
+
+@bp.route('/sw.js')
+def service_worker():
+    """Service Worker должен подаваться с корня, чтобы scope был / """
+    static_dir = os.path.join(os.path.dirname(__file__), 'static')
+    response = send_from_directory(static_dir, 'sw.js', mimetype='application/javascript')
+    response.headers['Cache-Control'] = 'no-cache'
+    response.headers['Service-Worker-Allowed'] = '/'
+    return response
+
+
+@bp.route('/manifest.webmanifest')
+def manifest():
+    static_dir = os.path.join(os.path.dirname(__file__), 'static')
+    return send_from_directory(static_dir, 'manifest.webmanifest', mimetype='application/manifest+json')
+
+
+@bp.route('/offline')
+def offline_page():
+    """Страница для отображения когда сеть недоступна (резерв)."""
+    return render_template('offline.html')
+
+
+@bp.route('/api/push/vapid-public-key')
+def api_push_vapid_public_key():
+    """Публичный ключ VAPID для подписки клиента (если задан в env)."""
+    return jsonify({'key': os.environ.get('VAPID_PUBLIC_KEY', '')})
+
+
+@bp.route('/api/push/subscribe', methods=['POST'])
+def api_push_subscribe():
+    user_id = session.get('user_id')
+    if user_id is None:
+        return jsonify({'error': 'unauthorized'}), 401
+    if not request.is_json:
+        return jsonify({'error': 'invalid_payload'}), 400
+    data = request.get_json(silent=True) or {}
+    endpoint = (data.get('endpoint') or '').strip()
+    keys = data.get('keys') or {}
+    p256dh = (keys.get('p256dh') or '').strip()
+    auth = (keys.get('auth') or '').strip()
+    if not endpoint or not p256dh or not auth:
+        return jsonify({'error': 'missing_fields'}), 400
+    user_agent = request.headers.get('User-Agent', '')[:500]
+    with models.get_conn() as conn:
+        models.ensure_push_subscriptions_table(conn)
+        models.push_subscribe(conn, int(user_id), endpoint, p256dh, auth, user_agent)
+        conn.commit()
+    return jsonify({'ok': True})
+
+
+@bp.route('/api/push/unsubscribe', methods=['POST'])
+def api_push_unsubscribe():
+    if not request.is_json:
+        return jsonify({'error': 'invalid_payload'}), 400
+    data = request.get_json(silent=True) or {}
+    endpoint = (data.get('endpoint') or '').strip()
+    if not endpoint:
+        return jsonify({'error': 'missing_endpoint'}), 400
+    with models.get_conn() as conn:
+        models.ensure_push_subscriptions_table(conn)
+        models.push_unsubscribe(conn, endpoint)
+        conn.commit()
+    return jsonify({'ok': True})
 
 
 @bp.route('/')
@@ -138,13 +285,25 @@ def index():
         featured_lots = [_build_lot_view(conn, l) for l in featured_raw]
         critical = sum(1 for l in lots if l['end_offset_seconds'] < 600)
         total_volume_usd = sum(l['current_price_amd'] for l in lots)
+        # Доп метрики для hero-стрипы
+        with conn.cursor() as cur:
+            cur.execute("SELECT COUNT(*) FROM bids WHERE share_verified = TRUE AND created_at >= NOW() - INTERVAL '24 hours'")
+            bids_today_row = cur.fetchone()
+            bids_today = int(bids_today_row[0]) if bids_today_row else 0
+            cur.execute("SELECT COUNT(DISTINCT user_id) FROM bids WHERE share_verified = TRUE AND created_at >= NOW() - INTERVAL '24 hours'")
+            bidders_row = cur.fetchone()
+            bidders_today = int(bidders_row[0]) if bidders_row else 0
         conn.commit()
     stats = {
         'active_lots': '{:02d}'.format(len(lots)),
         'total_volume': '{:,}'.format(total_volume_usd),
         'critical_timers': '{:02d}'.format(critical),
+        'bids_today': bids_today,
+        'bidders_today': bidders_today,
     }
-    return render_template('index.html', lots=lots, featured_lots=featured_lots, stats=stats, search_query=q)
+    _assign_catalog_layout(lots)
+    category_counts = _build_category_counts(lots)
+    return render_template('index.html', lots=lots, featured_lots=featured_lots, stats=stats, search_query=q, category_counts=category_counts)
 
 
 @bp.route('/api/lots')
@@ -181,17 +340,55 @@ def api_lots_by_status():
 @bp.route('/api/search')
 def api_search():
     q = (request.args.get('q') or '').strip()
-    if len(q) < 2:
+    cat = (request.args.get('cat') or '').strip().lower()
+    status = (request.args.get('status') or '').strip().lower()
+    try:
+        max_price = float(request.args.get('max_price') or 0) or None
+    except (TypeError, ValueError):
+        max_price = None
+    try:
+        min_price = float(request.args.get('min_price') or 0) or None
+    except (TypeError, ValueError):
+        min_price = None
+    has_filters = bool(cat or status or max_price or min_price)
+    if len(q) < 2 and not has_filters:
         return jsonify({'results': []})
     with models.get_conn() as conn:
         all_lots = models.all_lots_for_search(conn)
         conn.commit()
-    ranked = smart_search.smart_search(all_lots, q, limit=8)
-    if not ranked:
-        with models.get_conn() as conn:
-            rows = models.quick_search_lots(conn, q, limit=8)
-            conn.commit()
-        ranked = rows
+    if len(q) >= 2:
+        ranked = smart_search.smart_search(all_lots, q, limit=60)
+        if not ranked:
+            with models.get_conn() as conn:
+                rows = models.quick_search_lots(conn, q, limit=60)
+                conn.commit()
+            ranked = rows
+    else:
+        ranked = list(all_lots)
+    # Применяем фильтры пост-фактум, чтобы не ломать smart_search
+    def keep(r):
+        if cat and cat != 'all':
+            if cat == 'hot':
+                end_t = r.get('end_time')
+                if end_t is None:
+                    return False
+                offset = (end_t - datetime.now(timezone.utc)).total_seconds()
+                if offset >= 3600 or r.get('status') != 'active':
+                    return False
+            elif (r.get('lot_type') or '').lower() != cat:
+                return False
+        if status and (r.get('status') or '').lower() != status:
+            return False
+        try:
+            price = float(r.get('current_price_usd') or 0)
+        except (TypeError, ValueError):
+            price = 0.0
+        if max_price is not None and price > max_price:
+            return False
+        if min_price is not None and price < min_price:
+            return False
+        return True
+    ranked = [r for r in ranked if keep(r)][:24]
     out = []
     for r in ranked:
         out.append({
@@ -205,7 +402,7 @@ def api_search():
             'current_price_usd': '{:.0f}'.format(float(r['current_price_usd'])),
             'url': '/lot/{}'.format(int(r['id'])),
         })
-    return jsonify({'results': out, 'query': q})
+    return jsonify({'results': out, 'query': q, 'filters': {'cat': cat, 'status': status, 'max_price': max_price, 'min_price': min_price}})
 
 
 @bp.route('/lot/<int:lot_id>')

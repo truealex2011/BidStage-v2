@@ -8,10 +8,12 @@
   <div class="grid gap-6 lg:grid-cols-12 mt-5">
     <section class="cyber-card p-6 sm:p-8 lg:col-span-7">
       <div class="flex items-start gap-4">
-        <span class="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#7c5cfc] to-[#f0a500] text-lg font-bold">{{ seller.username[:2]|upper }}</span>
+        <span class="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#7c5cfc] to-[#f0a500] text-lg font-bold" style="box-shadow:0 0 24px rgba(240,165,0,0.35);">{{ seller.username[:2]|upper }}</span>
         <div class="min-w-0 flex-1">
-          <p class="text-sm font-bold uppercase tracking-wider text-violet">Продавец</p>
-          <h1 class="heading mt-1 text-3xl font-bold truncate">{{ seller.username }}</h1>
+          <span class="hero-kicker"><span class="hero-kicker-bar"></span><span>Продавец</span></span>
+          <h1 class="page-hero-title" style="font-size:clamp(1.6rem,2.6vw,2.2rem);justify-content:flex-start;">
+            <span class="hero-word-violet">{{ seller.username }}</span>
+          </h1>
           <div class="mt-3 flex items-center gap-3">
             <div class="flex items-center gap-1">
               {% for i in range(5) %}
@@ -28,18 +30,27 @@
         </div>
       </div>
       <div class="divider"></div>
-      <div class="grid grid-cols-3 gap-4">
-        <div>
-          <p class="text-xs font-bold uppercase tracking-wide text-muted">Всего лотов</p>
-          <p class="mt-1 text-2xl font-bold">{{ stats.total_lots }}</p>
+      <div class="seller-stat-grid">
+        <div class="seller-stat">
+          <iconify-icon icon="lucide:package" class="seller-stat-icon"></iconify-icon>
+          <div class="seller-stat-body">
+            <span class="seller-stat-value">{{ stats.total_lots }}</span>
+            <span class="seller-stat-label">Всего лотов</span>
+          </div>
         </div>
-        <div>
-          <p class="text-xs font-bold uppercase tracking-wide text-muted">Продано</p>
-          <p class="mt-1 text-2xl font-bold text-violet">{{ stats.sold_lots }}</p>
+        <div class="seller-stat">
+          <iconify-icon icon="lucide:trending-up" class="seller-stat-icon seller-stat-icon-violet"></iconify-icon>
+          <div class="seller-stat-body">
+            <span class="seller-stat-value seller-stat-value-violet">{{ stats.sold_lots }}</span>
+            <span class="seller-stat-label">Продано</span>
+          </div>
         </div>
-        <div>
-          <p class="text-xs font-bold uppercase tracking-wide text-muted">Успех</p>
-          <p class="mt-1 text-2xl font-bold text-amber">{{ stats.success_rate }}%</p>
+        <div class="seller-stat">
+          <iconify-icon icon="lucide:percent" class="seller-stat-icon seller-stat-icon-amber"></iconify-icon>
+          <div class="seller-stat-body">
+            <span class="seller-stat-value seller-stat-value-amber">{{ stats.success_rate }}%</span>
+            <span class="seller-stat-label">Успех</span>
+          </div>
         </div>
       </div>
     </section>

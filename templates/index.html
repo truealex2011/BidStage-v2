@@ -3,48 +3,104 @@
 <main class="relative mx-auto max-w-[1440px] px-6 py-10 lg:px-12 lg:py-14">
 
   {% set hero = lots[0] if lots else None %}
-  <section class="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12 mb-16 lg:mb-20">
-    <div class="lg:col-span-7 relative">
-      <div class="cyber-card p-2 aspect-[4/3] relative group overflow-hidden">
-        <div class="absolute inset-0 angular-small bg-[linear-gradient(135deg,#7c5cfc_0%,#1a1a2e_45%,#f0a500_100%)] opacity-90 transition-opacity group-hover:opacity-100"></div>
-        <div class="absolute inset-0 angular-small bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.18),transparent_45%)]"></div>
-        <div class="absolute top-6 left-6 flex flex-col gap-2 z-10">
-          <span class="pill">Premium drop {% if hero %}#{{ hero.id }}{% else %}#000{% endif %}</span>
-          <span class="pill pill-violet">Verified protocol</span>
+  <section class="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-6 mb-16 lg:mb-20 items-stretch">
+    <div class="lg:col-span-8 relative flex">
+      <div class="hero-stage cyber-card critical-pulse p-2 relative group overflow-hidden flex-1">
+        {% if hero and hero.image_url %}
+        <img src="{{ hero.image_url }}" alt="{{ hero.title }}" class="hero-stage-img" loading="eager" onerror="this.remove();">
+        {% endif %}
+        <div class="hero-stage-grad angular-small"></div>
+        <div class="hero-stage-shine angular-small"></div>
+        <div class="hero-stage-vignette"></div>
+        {% if hero %}
+        <div class="hero-stage-stats">
+          <div class="hero-stat">
+            <iconify-icon icon="lucide:gavel" class="text-base text-violet"></iconify-icon>
+            <span><strong>{{ hero.bid_count }}</strong> ставок</span>
+          </div>
+          <div class="hero-stat">
+            <iconify-icon icon="lucide:flame" class="text-base text-amber"></iconify-icon>
+            <span data-translate>{{ hero.lot_type|capitalize if hero.lot_type else 'Билеты' }}</span>
+          </div>
         </div>
-        {% if hero and hero.status == 'active' %}
-        <div class="absolute bottom-6 left-6 right-6 z-10">
-          <p class="heading text-3xl font-bold leading-none text-white md:text-4xl" data-translate>{{ hero.title }}</p>
-          <p class="mt-2 text-xs uppercase tracking-wide text-white/70" data-translate>{{ hero.artist }}</p>
+        {% endif %}
+        {% if hero %}
+        <div class="hero-stage-foot">
+          <span class="hero-stage-eyebrow" data-translate>{{ hero.artist }}</span>
+          <h2 class="hero-stage-title">
+            {% set words = hero.title.split(' ') %}
+            {% set palette = ['white', 'gold', 'violet'] %}
+            {% for w in words %}
+              <span class="hero-stage-word-{{ palette[loop.index0 % 3] }}">{{ w }}</span>{% if not loop.last %} {% endif %}
+            {% endfor %}
+          </h2>
+          {% if hero.status == 'active' %}
+          <div class="hero-stage-foot-row">
+            <span class="pill pill-live"><span class="live-dot"></span>LIVE</span>
+            <span class="hero-stage-lotid">LOT&nbsp;#{{ hero.id }}</span>
+          </div>
+          {% endif %}
         </div>
         {% endif %}
       </div>
     </div>
 
-    <div class="lg:col-span-5 flex flex-col justify-center">
+    <div class="lg:col-span-4 flex flex-col justify-center">
       <div class="mb-8">
-        <h1 class="heading text-5xl font-extrabold leading-none lg:text-6xl">
-          <span data-i18n="hero.premium">ПРЕМИУМ</span><br>
-          <span class="text-violet" data-i18n="hero.auction">АУКЦИОН</span>
+        <span class="hero-kicker">
+          <span class="hero-kicker-bar"></span>
+          <span>BidStage · live auctions</span>
+        </span>
+        <h1 class="hero-h1">
+          <span class="hero-word-violet" data-i18n="hero.premium">ПРЕМИУМ</span>
+          <span class="hero-word-gold" data-i18n="hero.auction">АУКЦИОН</span>
         </h1>
+        <div class="hero-h1-rule" aria-hidden="true">
+          <span class="hero-h1-rule-line"></span>
+          <span class="hero-h1-rule-star">✦</span>
+          <span class="hero-h1-rule-line"></span>
+        </div>
         <p class="mt-4 max-w-md text-base leading-relaxed text-muted" data-i18n="hero.subtitle">
           Концертные лоты, VIP-столы и бэкстейдж-моменты в формате торгов в реальном времени. Чтобы ставка засчиталась — поделись лотом в соцсетях.
         </p>
       </div>
 
       {% if hero %}
-      <div class="cyber-card p-6 sm:p-8 critical-pulse" data-lot-id="{{ hero.id }}" data-status="{{ hero.status }}" data-price-amd="{{ hero.current_price_amd }}" data-end-offset="{{ hero.end_offset_seconds }}" data-end-ts="{{ hero.end_ts_ms }}" data-step-amd="{{ hero.step_amd }}" data-name="{{ hero.title }}">
-        <div class="flex items-end justify-between gap-4 mb-6">
+      <div class="cyber-card hero-bid-card p-5 sm:p-6 critical-pulse" data-lot-id="{{ hero.id }}" data-status="{{ hero.status }}" data-price-amd="{{ hero.current_price_amd }}" data-end-offset="{{ hero.end_offset_seconds }}" data-end-ts="{{ hero.end_ts_ms }}" data-step-amd="{{ hero.step_amd }}" data-name="{{ hero.title }}">
+        {% if hero.status == 'active' %}
+        <div class="mb-4 flex items-center gap-2">
+          <span class="pill pill-live"><span class="live-dot"></span>LIVE</span>
+          <span class="pill pill-violet-soft"><iconify-icon icon="lucide:zap" class="text-sm"></iconify-icon> ставки идут прямо сейчас</span>
+        </div>
+        {% endif %}
+        <div class="flex items-end justify-between gap-4 mb-3">
           <div>
             <span class="block mb-1 text-xs uppercase tracking-wider text-muted" data-i18n="lot.currentBid">Текущая ставка</span>
             <span class="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              <span class="price" data-price-usd="{{ '%.2f'|format(hero.current_price_usd_value or 0) }}">${{ '%.2f'|format(hero.current_price_usd_value or 0) }}</span>
+              <span class="price hero-price-num" data-price-usd="{{ '%.2f'|format(hero.current_price_usd_value or 0) }}">${{ '%.2f'|format(hero.current_price_usd_value or 0) }}</span>
             </span>
           </div>
           <div class="text-right">
             <span class="block mb-1 text-xs uppercase tracking-wider text-muted">До конца</span>
             <span class="timer glitch-amber block tabular-nums text-2xl font-bold sm:text-3xl" data-text="00:00:00">00:00:00</span>
           </div>
+        </div>
+
+        {% set sp = hero.start_price_usd or 0 %}
+        {% set cp = hero.current_price_usd_value or 0 %}
+        {% set growth_pct_raw = (((cp - sp) / sp) * 100) if sp > 0 else 0 %}
+        {% set growth_pct = growth_pct_raw if growth_pct_raw > 0 else 0 %}
+        {% set bar_pct = 8 + ([growth_pct, 92]|min) %}
+        <div class="hero-progress" aria-hidden="true">
+          <div class="hero-progress-fill" style="width:{{ bar_pct }}%;"></div>
+        </div>
+        <div class="flex justify-between text-[10px] uppercase tracking-wider text-faint mt-1 mb-5">
+          <span>старт ${{ '%.0f'|format(sp) }}</span>
+          {% if growth_pct > 0 %}
+          <span class="text-amber font-bold">+{{ '%.1f'|format(growth_pct) }}%</span>
+          {% else %}
+          <span>—</span>
+          {% endif %}
         </div>
 
         {% if me %}
@@ -59,9 +115,19 @@
         </a>
         {% endif %}
 
-        <div class="mt-5 flex items-center justify-between text-xs font-medium uppercase tracking-wide text-muted">
-          <span>Шаг: AMD {{ hero.step_amd }}</span>
-          <span>{{ hero.bid_count }} активных ставок</span>
+        <div class="hero-bid-meta">
+          <div class="hero-bid-meta-cell">
+            <span class="hero-bid-meta-label">Шаг</span>
+            <span class="hero-bid-meta-value">AMD {{ hero.step_amd }}</span>
+          </div>
+          <div class="hero-bid-meta-cell">
+            <span class="hero-bid-meta-label">Ставок</span>
+            <span class="hero-bid-meta-value">{{ hero.bid_count }}</span>
+          </div>
+          <div class="hero-bid-meta-cell">
+            <span class="hero-bid-meta-label">Цена</span>
+            <span class="hero-bid-meta-value">≈ AMD {{ hero.current_price_amd }}</span>
+          </div>
         </div>
       </div>
       {% endif %}
@@ -71,15 +137,15 @@
   <section class="mb-12">
     <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div>
-        <p class="text-sm font-bold uppercase tracking-wider text-amber" data-i18n="catalog.topTitle">⭐ Топ</p>
+        <p class="text-sm font-bold uppercase tracking-wider text-amber inline-flex items-center gap-2" data-i18n="catalog.topTitle"><iconify-icon icon="lucide:star" class="text-base"></iconify-icon> Топ</p>
         <h2 class="heading mt-1 text-2xl font-bold tracking-tight md:text-3xl" data-i18n="catalog.topSubtitle">Продвинутые аукционы</h2>
       </div>
       <div class="flex gap-2">
-        <button type="button" id="carousel-prev" class="btn btn-ghost btn-sm" aria-label="Назад">
-          <iconify-icon icon="lucide:chevron-left" class="text-base"></iconify-icon>
+        <button type="button" id="carousel-prev" class="carousel-arrow" aria-label="Назад">
+          <iconify-icon icon="lucide:chevron-left" class="text-lg"></iconify-icon>
         </button>
-        <button type="button" id="carousel-next" class="btn btn-ghost btn-sm" aria-label="Вперёд">
-          <iconify-icon icon="lucide:chevron-right" class="text-base"></iconify-icon>
+        <button type="button" id="carousel-next" class="carousel-arrow" aria-label="Вперёд">
+          <iconify-icon icon="lucide:chevron-right" class="text-lg"></iconify-icon>
         </button>
       </div>
     </div>
@@ -88,34 +154,60 @@
       <div id="lot-carousel" class="carousel-viewport">
         <div class="carousel-track">
           {% for lot in featured_lots %}
-          <a href="/lot/{{ lot.id }}" class="lot-card group block" data-lot-id="{{ lot.id }}" data-status="{{ lot.status }}" data-price-amd="{{ lot.current_price_amd }}" data-end-offset="{{ lot.end_offset_seconds }}" data-end-ts="{{ lot.end_ts_ms }}" data-step-amd="{{ lot.step_amd }}" data-name="{{ lot.title }}">
+          <a href="/lot/{{ lot.id }}" class="lot-card lot-card-top lot-card-snap group block" data-featured="1" data-lot-id="{{ lot.id }}" data-status="{{ lot.status }}" data-price-amd="{{ lot.current_price_amd }}" data-end-offset="{{ lot.end_offset_seconds }}" data-end-ts="{{ lot.end_ts_ms }}" data-step-amd="{{ lot.step_amd }}" data-name="{{ lot.title }}">
             <div class="lot-cover lot-cover-grad-{{ loop.index0 % 4 }} {% if lot.image_url %}has-image{% endif %}">
               {% if lot.image_url %}
               <img src="{{ lot.image_url }}" alt="{{ lot.title }}" class="lot-cover-img" loading="lazy" onerror="this.remove();">
               {% endif %}
               <div class="lot-cover-fade"></div>
               <div class="lot-cover-pills">
-                <span class="pill pill-amber">⭐ TOP</span>
-                <span class="pill">#{{ lot.id }}</span>
-                {% if lot.end_offset_seconds < 3600 %}
-                <span class="pill pill-amber" data-i18n="badge.endingSoon">⏰ скоро финал</span>
+                {% if lot.status == 'ended' %}
+                <span class="pill pill-ended">Завершён</span>
+                {% elif lot.status != 'active' %}
+                <span class="pill pill-active-status">Скоро</span>
+                {% endif %}
+                <span class="pill pill-amber inline-flex items-center gap-1"><iconify-icon icon="lucide:star" class="text-xs"></iconify-icon> TOP</span>
+                {% if lot.end_offset_seconds < 3600 and lot.status == 'active' %}
+                <span class="pill pill-amber inline-flex items-center gap-1" data-i18n="badge.endingSoon"><iconify-icon icon="lucide:timer" class="text-xs"></iconify-icon> скоро финал</span>
                 {% endif %}
               </div>
-              <div class="lot-cover-foot">
-                <p class="lot-cover-title" data-translate>{{ lot.title }}</p>
-                <p class="lot-cover-artist" data-translate>{{ lot.artist }}</p>
+              <div class="lot-cover-foot lot-snap-foot">
+                <span class="lot-snap-eyebrow" data-translate>{{ lot.artist }}</span>
+                <p class="lot-cover-title lot-snap-title">
+                  {% set words = lot.title.split(' ') %}
+                  {% set palette = ['white', 'gold', 'violet'] %}
+                  {% for w in words %}
+                    <span class="hero-stage-word-{{ palette[loop.index0 % 3] }}">{{ w }}</span>{% if not loop.last %} {% endif %}
+                  {% endfor %}
+                </p>
               </div>
             </div>
             <div class="px-1 mt-3">
               <div class="flex items-center justify-between">
                 <div>
                   <p class="text-xs uppercase tracking-wider text-muted">Ставка</p>
-                  <p class="price text-lg font-bold text-violet" data-price-usd="{{ '%.2f'|format(lot.current_price_usd_value or 0) }}">${{ '%.2f'|format(lot.current_price_usd_value or 0) }}</p>
+                  <p class="price text-lg font-bold lot-snap-price" data-price-usd="{{ '%.2f'|format(lot.current_price_usd_value or 0) }}">${{ '%.2f'|format(lot.current_price_usd_value or 0) }}</p>
                 </div>
                 <div class="text-right">
                   <p class="text-xs uppercase tracking-wider text-muted">До конца</p>
                   <p class="timer font-mono text-base font-bold tabular-nums" data-text="00:00:00">00:00:00</p>
                 </div>
+              </div>
+              {% set sp = lot.start_price_usd or 0 %}
+              {% set cp = lot.current_price_usd_value or 0 %}
+              {% set growth_pct_raw = (((cp - sp) / sp) * 100) if sp > 0 else 0 %}
+              {% set growth_pct = growth_pct_raw if growth_pct_raw > 0 else 0 %}
+              {% set bar_pct = 6 + ([growth_pct, 94]|min) %}
+              <div class="lot-snap-progress" aria-hidden="true">
+                <div class="lot-snap-progress-fill" style="width:{{ bar_pct }}%;"></div>
+              </div>
+              <div class="flex justify-between text-[9px] uppercase tracking-wider text-faint mt-1">
+                <span>старт ${{ '%.0f'|format(sp) }}</span>
+                {% if growth_pct > 0 %}
+                <span class="text-amber font-bold">+{{ '%.1f'|format(growth_pct) }}%</span>
+                {% else %}
+                <span>{{ lot.bid_count }} ставок</span>
+                {% endif %}
               </div>
             </div>
             <span class="carousel-item-overlay" aria-hidden="true"></span>
@@ -131,7 +223,7 @@
       </div>
     </div>
 
-    <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <div class="mb-5 flex flex-wrap items-end justify-between gap-4">
       <div>
         <p class="text-sm font-bold uppercase tracking-wider text-violet" data-i18n="catalog.title">Каталог</p>
         <h2 id="lots" class="heading mt-1 text-2xl font-bold tracking-tight md:text-3xl" data-i18n="catalog.subtitle">Концертные лоты</h2>
@@ -152,41 +244,95 @@
       </div>
     </div>
 
-    <div id="lot-grid" data-current-filter="active" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 sm:gap-6">
+    <div class="cat-tabs" id="cat-tabs" role="tablist">
+      <button type="button" class="cat-tab is-active" data-cat="all">
+        <iconify-icon icon="lucide:layers" class="text-base"></iconify-icon>
+        <span>Все</span>
+        <span class="cat-tab-count">{{ category_counts.all }}</span>
+      </button>
+      {% if category_counts.hot %}
+      <button type="button" class="cat-tab cat-tab-hot" data-cat="hot">
+        <iconify-icon icon="lucide:flame" class="text-base"></iconify-icon>
+        <span>Горящие</span>
+        <span class="cat-tab-count">{{ category_counts.hot }}</span>
+      </button>
+      {% endif %}
+      {% if category_counts.tickets %}
+      <button type="button" class="cat-tab" data-cat="tickets">
+        <iconify-icon icon="lucide:ticket" class="text-base"></iconify-icon>
+        <span>Концерты</span>
+        <span class="cat-tab-count">{{ category_counts.tickets }}</span>
+      </button>
+      {% endif %}
+      {% if category_counts.vip %}
+      <button type="button" class="cat-tab" data-cat="vip">
+        <iconify-icon icon="lucide:crown" class="text-base"></iconify-icon>
+        <span>VIP-пропуски</span>
+        <span class="cat-tab-count">{{ category_counts.vip }}</span>
+      </button>
+      {% endif %}
+      {% if category_counts.table %}
+      <button type="button" class="cat-tab" data-cat="table">
+        <iconify-icon icon="lucide:utensils" class="text-base"></iconify-icon>
+        <span>Столы</span>
+        <span class="cat-tab-count">{{ category_counts.table }}</span>
+      </button>
+      {% endif %}
+      <button type="button" id="lot-mosaic-fs" class="cat-fs-btn" aria-label="Развернуть каталог" aria-expanded="false" title="Развернуть каталог">
+        <iconify-icon icon="lucide:maximize-2" class="text-base cat-fs-ico-open"></iconify-icon>
+        <iconify-icon icon="lucide:minimize-2" class="text-base cat-fs-ico-close"></iconify-icon>
+        <span class="cat-fs-label">Развернуть</span>
+      </button>
+    </div>
+
+    <div id="lot-grid" data-current-filter="active" data-current-cat="all" class="lot-mosaic">
       {% for lot in lots %}
-      <a href="/lot/{{ lot.id }}" class="lot-card group block" data-lot-id="{{ lot.id }}" data-status="{{ lot.status }}" data-price-amd="{{ lot.current_price_amd }}" data-end-offset="{{ lot.end_offset_seconds }}" data-end-ts="{{ lot.end_ts_ms }}" data-step-amd="{{ lot.step_amd }}" data-name="{{ lot.title }}">
+      <a href="/lot/{{ lot.id }}" class="lot-card lot-card-mosaic lot-card-{{ lot.layout }} group block" data-lot-id="{{ lot.id }}" data-status="{{ lot.status }}" data-cat="{{ lot.lot_type }}" data-hot="{% if lot.end_offset_seconds < 3600 and lot.status == 'active' %}1{% else %}0{% endif %}" data-price-amd="{{ lot.current_price_amd }}" data-end-offset="{{ lot.end_offset_seconds }}" data-end-ts="{{ lot.end_ts_ms }}" data-step-amd="{{ lot.step_amd }}" data-name="{{ lot.title }}">
         <div class="lot-cover lot-cover-grad-{{ loop.index0 % 4 }} {% if lot.image_url %}has-image{% endif %}">
           {% if lot.image_url %}
           <img src="{{ lot.image_url }}" alt="{{ lot.title }}" class="lot-cover-img" loading="lazy" onerror="this.remove();">
           {% endif %}
           <div class="lot-cover-fade"></div>
           <div class="lot-cover-pills">
-            <span class="pill">#{{ lot.id }}</span>
-            <span class="pill {% if lot.status == 'active' %}pill-violet{% elif lot.status == 'ended' %}pill-muted{% else %}pill-amber-soft{% endif %}" data-i18n="status.{{ lot.status }}">
-              {% if lot.status == 'active' %}Идёт{% elif lot.status == 'ended' %}Завершён{% else %}Скоро{% endif %}
-            </span>
+            {% if lot.status == 'ended' %}
+            <span class="pill pill-ended">Завершён</span>
+            {% elif lot.status != 'active' %}
+            <span class="pill pill-active-status">Скоро</span>
+            {% endif %}
+            {% if lot.layout == 'xl' %}
+            <span class="pill pill-amber inline-flex items-center gap-1"><iconify-icon icon="lucide:flame" class="text-xs"></iconify-icon> HOT</span>
+            {% endif %}
           </div>
-          <div class="lot-cover-foot">
-            <p class="lot-cover-title" data-translate>{{ lot.title }}</p>
-            <p class="lot-cover-artist" data-translate>{{ lot.artist }}</p>
+          <div class="lot-cover-foot lot-mosaic-foot">
+            <span class="lot-mosaic-eyebrow" data-translate>{{ lot.artist }}</span>
+            <p class="lot-cover-title lot-mosaic-title" data-translate>{{ lot.title }}</p>
+            <div class="lot-mosaic-meta">
+              <div class="lot-mosaic-meta-price">
+                <span class="lot-mosaic-meta-label">Ставка</span>
+                <span class="lot-mosaic-price price" data-price-usd="{{ '%.2f'|format(lot.current_price_usd_value or 0) }}">${{ '%.2f'|format(lot.current_price_usd_value or 0) }}</span>
+              </div>
+              <div class="lot-mosaic-meta-timer">
+                <span class="lot-mosaic-meta-label">До конца</span>
+                <span class="timer lot-mosaic-meta-timer-value font-mono tabular-nums" data-text="00:00:00">00:00:00</span>
+              </div>
+            </div>
           </div>
           {% if lot.end_offset_seconds < 600 and lot.status == 'active' %}
-          <span class="pill pill-amber lot-cover-extra" data-i18n="badge.finalHour">Финальный час</span>
+          <span class="pill pill-amber lot-cover-extra inline-flex items-center gap-1" data-i18n="badge.finalHour"><iconify-icon icon="lucide:timer" class="text-xs"></iconify-icon> Финальный час</span>
           {% elif lot.bid_count > 0 %}
-          <span class="pill pill-success lot-cover-extra" data-i18n="badge.reserveMet">Резерв пройден</span>
+          <span class="pill pill-success lot-cover-extra inline-flex items-center gap-1" data-i18n="badge.reserveMet"><iconify-icon icon="lucide:check" class="text-xs"></iconify-icon> Резерв пройден</span>
           {% endif %}
         </div>
         <div class="px-1">
           <div class="flex items-start justify-between gap-3">
             <div class="min-w-0 flex-1">
-              <h4 class="heading mb-1 truncate text-base font-bold sm:text-lg" data-translate>{{ lot.title }}</h4>
               <p class="truncate text-xs uppercase tracking-wide text-muted">
-                <span data-i18n="lot.type.{{ lot.lot_type }}">{% if lot.lot_type == 'tickets' %}Билеты{% elif lot.lot_type == 'vip' %}VIP-пропуск{% else %}Стол{% endif %}</span> · <span data-translate>{{ lot.artist }}</span>
+                <span data-i18n="lot.type.{{ lot.lot_type }}">{% if lot.lot_type == 'tickets' %}Билеты{% elif lot.lot_type == 'vip' %}VIP-пропуск{% else %}Стол{% endif %}</span>
               </p>
             </div>
             <div class="text-right">
               <span class="block text-xs uppercase tracking-wider text-muted" data-i18n="lot.currentBid">Текущая</span>
-              <span class="price text-base font-bold text-violet sm:text-lg" data-price-usd="{{ '%.2f'|format(lot.current_price_usd_value or 0) }}">${{ '%.2f'|format(lot.current_price_usd_value or 0) }}</span>
+              <span class="price text-base font-bold lot-mosaic-price sm:text-lg" data-price-usd="{{ '%.2f'|format(lot.current_price_usd_value or 0) }}">${{ '%.2f'|format(lot.current_price_usd_value or 0) }}</span>
             </div>
           </div>
           <div class="mt-3 flex items-center justify-between text-xs uppercase tracking-wide text-muted">
@@ -354,6 +500,84 @@ class LotCarousel {
     new LotCarousel('lot-carousel', 'carousel-prev', 'carousel-next');
   }
 
+  // Count-up для метрик
+  document.querySelectorAll('.hero-metric-value[data-counter]').forEach((el) => {
+    const target = Number(el.dataset.counter || 0);
+    if (!Number.isFinite(target) || target <= 0) return;
+    const duration = 900;
+    const start = performance.now();
+    const initial = el.textContent;
+    function tick(now) {
+      const t = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      el.textContent = String(Math.round(target * eased)).padStart(initial.length >= 2 && initial.startsWith('0') ? 2 : 0, '0');
+      if (t < 1) requestAnimationFrame(tick);
+      else el.textContent = initial;
+    }
+    el.textContent = '0';
+    requestAnimationFrame(tick);
+  });
+
+  // Категорийные табы каталога
+  (function () {
+    const tabs = document.querySelectorAll('#cat-tabs .cat-tab');
+    const grid = document.getElementById('lot-grid');
+    if (!tabs.length || !grid) return;
+    function applyCat(cat) {
+      grid.dataset.currentCat = cat;
+      const cards = grid.querySelectorAll('.lot-card-mosaic');
+      let idx = 0;
+      cards.forEach((card) => {
+        const matches = (
+          cat === 'all' ||
+          (cat === 'hot' && card.dataset.hot === '1') ||
+          card.dataset.cat === cat
+        );
+        if (matches) {
+          card.classList.remove('mosaic-hidden');
+          card.style.animation = 'none';
+          void card.offsetWidth;
+          card.style.animation = `mosaic-rise 0.45s ease-out ${0.04 + idx * 0.04}s both`;
+          idx++;
+        } else {
+          card.classList.add('mosaic-hidden');
+          card.style.animation = '';
+        }
+      });
+    }
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        tabs.forEach((t) => t.classList.remove('is-active'));
+        tab.classList.add('is-active');
+        applyCat(tab.dataset.cat || 'all');
+      });
+    });
+    // Первичная анимация при загрузке
+    applyCat('all');
+  })();
+
+  // Кнопка «развернуть на весь экран» для каталога
+  (function () {
+    const btn = document.getElementById('lot-mosaic-fs');
+    const grid = document.getElementById('lot-grid');
+    if (!btn || !grid) return;
+    let active = false;
+    function setState(on) {
+      active = !!on;
+      grid.classList.toggle('is-fullscreen', active);
+      document.body.classList.toggle('lot-mosaic-fs-lock', active);
+      btn.setAttribute('aria-expanded', active ? 'true' : 'false');
+      const lbl = btn.querySelector('.cat-fs-label');
+      if (lbl) lbl.textContent = active ? 'Свернуть' : 'Развернуть';
+      btn.title = active ? 'Свернуть каталог' : 'Развернуть каталог';
+      btn.setAttribute('aria-label', btn.title);
+    }
+    btn.addEventListener('click', () => setState(!active));
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && active) setState(false);
+    });
+  })();
+
   const btn = document.getElementById('dev-win-btn');
   if (!btn) return;
   btn.addEventListener('click', async () => {
@@ -391,6 +615,62 @@ class LotCarousel {
       btn.disabled = false;
     }
   });
+})();
+
+/* === Pull-to-refresh === */
+(function () {
+  // Только на тачскрине, только когда страница на самом верху
+  if (!('ontouchstart' in window)) return;
+  const HEAD_HEIGHT = 64;
+  const TRIGGER = 80;
+  const ind = document.createElement('div');
+  ind.className = 'bs-ptr-indicator';
+  ind.innerHTML = '<iconify-icon icon="lucide:refresh-cw" class="bs-ptr-icon"></iconify-icon><span class="bs-ptr-label">Потяни вниз</span>';
+  document.body.appendChild(ind);
+  let startY = 0;
+  let dy = 0;
+  let dragging = false;
+
+  document.addEventListener('touchstart', (e) => {
+    if (window.scrollY > 0) return;
+    startY = e.touches[0].clientY;
+    dragging = true;
+    dy = 0;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', (e) => {
+    if (!dragging) return;
+    dy = e.touches[0].clientY - startY;
+    if (dy < 0) { dy = 0; return; }
+    if (dy > 0) {
+      const eased = Math.min(dy * 0.55, 120);
+      ind.style.transform = 'translateX(-50%) translateY(' + (eased - 60) + 'px) rotate(' + (eased * 3) + 'deg)';
+      ind.classList.toggle('is-armed', eased >= TRIGGER);
+      if (eased >= TRIGGER) {
+        const lbl = ind.querySelector('.bs-ptr-label');
+        if (lbl) lbl.textContent = 'Отпусти';
+      } else {
+        const lbl = ind.querySelector('.bs-ptr-label');
+        if (lbl) lbl.textContent = 'Потяни вниз';
+      }
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', () => {
+    if (!dragging) return;
+    dragging = false;
+    const eased = Math.min(dy * 0.55, 120);
+    if (eased >= TRIGGER) {
+      ind.classList.add('is-loading');
+      const lbl = ind.querySelector('.bs-ptr-label');
+      if (lbl) lbl.textContent = 'Обновляем...';
+      ind.style.transform = 'translateX(-50%) translateY(20px)';
+      setTimeout(() => window.location.reload(), 350);
+    } else {
+      ind.style.transform = '';
+      ind.classList.remove('is-armed');
+    }
+  }, { passive: true });
 })();
 </script>
 {% endblock %}

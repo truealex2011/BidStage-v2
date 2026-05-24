@@ -2,8 +2,29 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0a0f" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f5f3ee" media="(prefers-color-scheme: light)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='icon-192.png') }}">
+  <link rel="icon" type="image/png" sizes="512x512" href="{{ url_for('static', filename='icon-512.png') }}">
   <title>{% block title %}BidStage · Премиум аукцион билетов{% endblock %}</title>
+  {# === OPEN GRAPH / TWITTER CARD === #}
+  <meta property="og:site_name" content="BidStage">
+  <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+  <meta property="og:title" content="{% block og_title %}BidStage · Премиум аукцион билетов{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}Аукцион концертных лотов, VIP-столов и бэкстейдж-моментов в реальном времени.{% endblock %}">
+  <meta property="og:url" content="{% block og_url %}{{ request.url }}{% endblock %}">
+  <meta property="og:image" content="{% block og_image %}{{ url_for('static', filename='lot_images/imagine_dragons.jpg', _external=True) }}{% endblock %}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ self.og_title() }}">
+  <meta name="twitter:description" content="{{ self.og_description() }}">
+  <meta name="twitter:image" content="{{ self.og_image() }}">
+  <meta name="description" content="{{ self.og_description() }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}?v={{ range(100000,999999)|random }}">
   <style>
     html, body { margin: 0; padding: 0; }
@@ -43,9 +64,9 @@
     .bs-notif-mark:hover{text-decoration:underline}
     .bs-notif-empty{padding:32px 14px;text-align:center;color:rgba(255,255,255,.5);font-size:.85rem}
     .bs-nav-badge{margin-left:auto;background:#ff4d6d;color:#fff;font-size:.7rem;font-weight:700;padding:1px 7px;border-radius:9px;min-width:20px;text-align:center}
-    .bs-toast-persistent{background:#181828;border:1px solid var(--violet);border-radius:10px;padding:14px 16px;margin-bottom:8px;display:flex;flex-direction:column;gap:6px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
-    .bs-toast-persistent-title{font-weight:700;font-size:.9rem}
-    .bs-toast-persistent-body{font-size:.78rem;color:rgba(255,255,255,.74);white-space:pre-wrap}
+    .bs-toast-persistent{background:#181828;border:1px solid var(--violet);border-radius:10px;padding:14px 16px;margin-bottom:8px;display:flex;flex-direction:column;gap:6px;box-shadow:0 10px 30px rgba(0,0,0,.5);color:#fff}
+    .bs-toast-persistent-title{font-weight:700;font-size:.9rem;color:#fff}
+    .bs-toast-persistent-body{font-size:.78rem;color:rgba(255,255,255,.85);white-space:pre-wrap}
     .bs-toast-persistent-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
     .bs-toast-persistent-btn{font-size:.75rem;padding:6px 12px;border-radius:6px;border:1px solid var(--violet);background:rgba(124,92,252,.15);color:#fff;cursor:pointer}
     .bs-toast-persistent-btn:hover{background:rgba(124,92,252,.3)}
@@ -64,7 +85,7 @@
     .bs-search-input{width:100%;padding:8px 12px 8px 36px;border-radius:8px;border:1px solid var(--border);background:rgba(124,92,252,.06);color:#fff;font-size:.85rem;outline:none;transition:border-color .15s}
     .bs-search-input:focus{border-color:#7c5cfc;background:rgba(124,92,252,.12)}
     .bs-search-input::placeholder{color:rgba(255,255,255,.45)}
-    .bs-search-dropdown{position:absolute;top:42px;left:0;right:0;background:#0e0e16;border:1px solid var(--border);border-radius:10px;box-shadow:0 18px 48px rgba(0,0,0,.55);z-index:301;max-height:420px;overflow-y:auto;display:none}
+    .bs-search-dropdown{position:fixed;background:#0e0e16;border:1px solid var(--border);border-radius:10px;box-shadow:0 18px 48px rgba(0,0,0,.55);z-index:301;max-height:420px;overflow-y:auto;display:none}
     .bs-search-dropdown.is-open{display:block}
     .bs-search-result{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;transition:background .12s;color:#fff;text-decoration:none}
     .bs-search-result:last-child{border-bottom:0}
@@ -89,6 +110,8 @@
     .carousel-track{scroll-behavior:smooth;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y}
     /* Блоки лота не должны вылезать */
     .lot-card,.cyber-card{max-width:100%;min-width:0}
+    /* Модалки не должны утягиваться правилом .cyber-card{max-width:100%} выше */
+    .modal-overlay .cyber-card.modal-card{max-width:36rem}
     .cyber-card{overflow:hidden}
     /* Длинные имена/числа везде переносятся */
     .truncate-soft{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
@@ -190,7 +213,16 @@
   <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap&subset=cyrillic,cyrillic-ext,latin,latin-ext" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap&subset=cyrillic,cyrillic-ext,latin,latin-ext" rel="stylesheet">
+  <script>
+    /* No-flash theme bootstrap */
+    (function () {
+      try {
+        var t = localStorage.getItem('bs.theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body class="gradient-mesh" {% if me %}data-current-user="{{ me.username }}"{% endif %}>
   <div class="scanline" style="display:none;"></div>
@@ -202,6 +234,7 @@
           <iconify-icon icon="lucide:menu" class="text-lg"></iconify-icon>
         </button>
         <a href="/" class="heading flex items-center gap-1 text-xl font-bold tracking-tighter sm:text-2xl flex-shrink-0">
+          <iconify-icon icon="lucide:gavel" class="text-base text-amber" style="filter:drop-shadow(0 0 6px var(--glow-gold));"></iconify-icon>
           <span class="text-violet">BID</span><span>STAGE</span>
         </a>
         <div class="bs-search-wrap relative hidden md:block">
@@ -212,7 +245,10 @@
       </div>
 
       <div class="flex items-center gap-2 justify-end flex-shrink-0" style="flex-wrap:nowrap;">
-        <span class="hidden xl:inline-flex pill pill-violet-soft">
+        <button type="button" id="bs-mobile-search-btn" class="bs-mobile-search-btn" aria-label="Поиск">
+          <iconify-icon icon="lucide:search"></iconify-icon>
+        </button>
+        <span id="bs-online-pill" class="hidden xl:inline-flex pill pill-violet-soft" style="display:none;">
           <span class="inline-block h-1.5 w-1.5 rounded-full animate-pulse" style="background:var(--success);"></span>
           <span data-online-count>0</span> <span data-i18n="header.online">в сети</span>
         </span>
@@ -226,6 +262,9 @@
           <button type="button" data-lang="hy" class="lang-btn seg-btn">HY</button>
           <button type="button" data-lang="en" class="lang-btn seg-btn">EN</button>
         </div>
+        <button type="button" id="bs-theme-toggle" class="bs-theme-btn hidden lg:inline-flex" aria-label="Сменить тему" title="Переключить тёмную/светлую тему">
+          <iconify-icon icon="lucide:moon" id="bs-theme-icon" class="text-lg"></iconify-icon>
+        </button>
         {% if me %}
           <div class="relative" id="bs-bell-wrap">
             <button type="button" id="bs-bell-btn" class="bs-bell" aria-label="Уведомления">
@@ -256,6 +295,28 @@
       </div>
     </div>
   </header>
+
+  <!-- Мобильный поиск — открывается из шапки на узких экранах -->
+  <div id="bs-mobile-search-overlay" class="bs-mobile-search-overlay" aria-hidden="true">
+    <div class="bs-mobile-search-overlay-bar">
+      <input type="text" id="bs-mobile-search-input" class="bs-mobile-search-overlay-input" placeholder="Поиск по аукционам..." autocomplete="off" enterkeyhint="search">
+      <button type="button" id="bs-mobile-search-close" class="bs-mobile-search-overlay-close" aria-label="Закрыть">
+        <iconify-icon icon="lucide:x" class="text-lg"></iconify-icon>
+      </button>
+    </div>
+    <div class="bs-mobile-search-filters" id="bs-mobile-search-filters">
+      <button type="button" class="bs-mobile-filter-chip is-active" data-filter-cat="all">Все</button>
+      <button type="button" class="bs-mobile-filter-chip" data-filter-cat="hot"><iconify-icon icon="lucide:flame"></iconify-icon>Горящие</button>
+      <button type="button" class="bs-mobile-filter-chip" data-filter-cat="tickets"><iconify-icon icon="lucide:ticket"></iconify-icon>Концерты</button>
+      <button type="button" class="bs-mobile-filter-chip" data-filter-cat="vip"><iconify-icon icon="lucide:crown"></iconify-icon>VIP</button>
+      <button type="button" class="bs-mobile-filter-chip" data-filter-cat="table"><iconify-icon icon="lucide:utensils"></iconify-icon>Столы</button>
+    </div>
+    <div class="bs-mobile-search-price">
+      <label class="bs-mobile-search-price-label">До <span id="bs-mobile-search-price-val">$1000</span></label>
+      <input type="range" id="bs-mobile-search-price-range" min="50" max="2000" step="50" value="1000" class="bs-mobile-search-price-input">
+    </div>
+    <div id="bs-mobile-search-results" class="bs-mobile-search-overlay-results"></div>
+  </div>
 
   <aside id="bs-sidebar" class="bs-sidebar" aria-hidden="true">
     <div class="bs-sidebar-inner">
@@ -289,6 +350,51 @@
         <a href="/auth/register" class="bs-nav-item text-violet"><iconify-icon icon="lucide:user-plus"></iconify-icon> <span data-i18n="header.signup">Регистрация</span></a>
         {% endif %}
       </nav>
+
+      <!-- Настройки в боковом меню (важно для мобильных, где их нет в шапке) -->
+      <div class="bs-sidebar-prefs">
+        <p class="bs-sidebar-prefs-title">Настройки</p>
+
+        <div class="bs-sidebar-pref">
+          <span class="bs-sidebar-pref-label">
+            <iconify-icon icon="lucide:moon" class="text-base"></iconify-icon>
+            <span>Тема</span>
+          </span>
+          <button type="button" id="bs-sidebar-theme-toggle" class="bs-sidebar-pref-toggle">
+            <iconify-icon icon="lucide:moon" id="bs-sidebar-theme-icon"></iconify-icon>
+            <span id="bs-sidebar-theme-label">Тёмная</span>
+          </button>
+        </div>
+
+        <div class="bs-sidebar-pref">
+          <span class="bs-sidebar-pref-label">
+            <iconify-icon icon="lucide:dollar-sign" class="text-base"></iconify-icon>
+            <span>Валюта</span>
+          </span>
+          <div class="seg seg-compact">
+            <button type="button" data-currency="AMD" class="currency-btn seg-btn seg-btn-active">AMD</button>
+            <button type="button" data-currency="RUB" class="currency-btn seg-btn">RUB</button>
+            <button type="button" data-currency="USD" class="currency-btn seg-btn">USD</button>
+          </div>
+        </div>
+
+        <div class="bs-sidebar-pref">
+          <span class="bs-sidebar-pref-label">
+            <iconify-icon icon="lucide:languages" class="text-base"></iconify-icon>
+            <span>Язык</span>
+          </span>
+          <div class="seg seg-compact">
+            <button type="button" data-lang="ru" class="lang-btn seg-btn seg-btn-active">RU</button>
+            <button type="button" data-lang="hy" class="lang-btn seg-btn">HY</button>
+            <button type="button" data-lang="en" class="lang-btn seg-btn">EN</button>
+          </div>
+        </div>
+
+        <button type="button" id="bs-install-pwa-btn" class="bs-install-btn hidden" onclick="window.bidstageInstallPWA()">
+          <iconify-icon icon="lucide:smartphone" class="text-base"></iconify-icon>
+          <span>Установить приложение</span>
+        </button>
+      </div>
     </div>
     <div class="bs-sidebar-backdrop" id="bs-sidebar-backdrop"></div>
   </aside>
@@ -313,6 +419,111 @@
     function bidstageLogout() {
       fetch('/auth/logout', { method: 'POST' }).finally(() => window.location.href = '/');
     }
+
+    /* === PWA: регистрация Service Worker + кнопка установки === */
+    (function () {
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js', { scope: '/' })
+            .then((reg) => {
+              // Проверяем обновление SW каждые 30 минут
+              setInterval(() => reg.update().catch(() => {}), 30 * 60 * 1000);
+            })
+            .catch((e) => { /* SW unavailable, тихо игнорируем */ });
+        });
+      }
+
+      let deferredPrompt = null;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        // Показать кнопку установки в сайдбаре, если она есть
+        const btn = document.getElementById('bs-install-pwa-btn');
+        if (btn) btn.classList.remove('hidden');
+      });
+      window.addEventListener('appinstalled', () => {
+        deferredPrompt = null;
+        const btn = document.getElementById('bs-install-pwa-btn');
+        if (btn) btn.classList.add('hidden');
+        if (window.bidstageToast) window.bidstageToast('Приложение установлено', 'good');
+      });
+      // Делаем доступ к prompt из кнопки в сайдбаре
+      window.bidstageInstallPWA = function () {
+        if (!deferredPrompt) {
+          if (window.bidstageToast) window.bidstageToast('Уже установлено или браузер не поддерживает', 'warn');
+          return;
+        }
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.finally(() => { deferredPrompt = null; });
+      };
+    })();
+
+    /* === Modal vs sticky bottom-bar
+       Когда открыта любая .modal-overlay — ставим body.has-modal-open,
+       чтобы лот-полоска снизу пряталась и не перекрывала контент модалки. */
+    (function () {
+      function syncModalState() {
+        const open = !!document.querySelector('.modal-overlay.is-open');
+        document.body.classList.toggle('has-modal-open', open);
+      }
+      const obs = new MutationObserver(syncModalState);
+      document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.modal-overlay').forEach((m) => {
+          obs.observe(m, { attributes: true, attributeFilter: ['class'] });
+        });
+        syncModalState();
+      });
+    })();
+
+    /* === Native Share === */
+    window.bidstageShare = async function (data) {
+      data = data || {};
+      const payload = {
+        title: data.title || document.title,
+        text: data.text || '',
+        url: data.url || window.location.href
+      };
+      if (navigator.share) {
+        try {
+          await navigator.share(payload);
+          return true;
+        } catch (e) {
+          if (e && e.name === 'AbortError') return false;
+        }
+      }
+      // Fallback — копируем в буфер
+      try {
+        await navigator.clipboard.writeText(payload.url);
+        if (window.bidstageToast) window.bidstageToast('Ссылка скопирована', 'good');
+        return true;
+      } catch (e) {
+        if (window.bidstageToast) window.bidstageToast('Не удалось поделиться', 'bad');
+        return false;
+      }
+    };
+    (function () {
+      const btn = document.getElementById('bs-theme-toggle');
+      const icon = document.getElementById('bs-theme-icon');
+      const sideBtn = document.getElementById('bs-sidebar-theme-toggle');
+      const sideIcon = document.getElementById('bs-sidebar-theme-icon');
+      const sideLabel = document.getElementById('bs-sidebar-theme-label');
+      function getTheme() { return document.documentElement.getAttribute('data-theme') || 'dark'; }
+      function sync() {
+        const t = getTheme();
+        if (icon) icon.setAttribute('icon', t === 'light' ? 'lucide:sun' : 'lucide:moon');
+        if (sideIcon) sideIcon.setAttribute('icon', t === 'light' ? 'lucide:sun' : 'lucide:moon');
+        if (sideLabel) sideLabel.textContent = t === 'light' ? 'Светлая' : 'Тёмная';
+      }
+      function toggle() {
+        const next = getTheme() === 'light' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', next);
+        try { localStorage.setItem('bs.theme', next); } catch (e) {}
+        sync();
+      }
+      sync();
+      if (btn) btn.addEventListener('click', toggle);
+      if (sideBtn) sideBtn.addEventListener('click', toggle);
+    })();
     (function () {
       const sidebar = document.getElementById('bs-sidebar');
       const toggle = document.getElementById('bs-menu-toggle');
@@ -339,7 +550,15 @@
 
       function close(){ dropdown.classList.remove('is-open'); activeIdx = -1; }
 
+      function position(){
+        const rect = input.getBoundingClientRect();
+        dropdown.style.top = (rect.bottom + 6) + 'px';
+        dropdown.style.left = rect.left + 'px';
+        dropdown.style.width = rect.width + 'px';
+      }
+
       function render(results, query){
+        position();
         if (!results.length) {
           dropdown.innerHTML = '<div class="bs-search-empty">Ничего не нашлось по «' + escapeHtml(query) + '»</div>';
           dropdown.classList.add('is-open');
@@ -408,8 +627,112 @@
         }
       });
       document.addEventListener('click', (e) => {
-        if (!e.target.closest('.bs-search-wrap')) close();
+        if (!e.target.closest('.bs-search-wrap') && !e.target.closest('.bs-search-dropdown')) close();
       });
+      window.addEventListener('resize', () => { if (dropdown.classList.contains('is-open')) position(); });
+      window.addEventListener('scroll', () => { if (dropdown.classList.contains('is-open')) position(); }, true);
+    })();
+
+    /* Мобильный поиск — оверлей */
+    (function(){
+      const btn = document.getElementById('bs-mobile-search-btn');
+      const overlay = document.getElementById('bs-mobile-search-overlay');
+      const input = document.getElementById('bs-mobile-search-input');
+      const results = document.getElementById('bs-mobile-search-results');
+      const closeBtn = document.getElementById('bs-mobile-search-close');
+      const filtersBox = document.getElementById('bs-mobile-search-filters');
+      const priceRange = document.getElementById('bs-mobile-search-price-range');
+      const priceVal = document.getElementById('bs-mobile-search-price-val');
+      if (!btn || !overlay || !input || !results) return;
+      let timer = null;
+      let activeCat = 'all';
+      let maxPrice = 1000;
+
+      function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s==null?'':String(s); return d.innerHTML; }
+      function open(){
+        overlay.classList.add('is-open');
+        overlay.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => input.focus(), 60);
+      }
+      function close(){
+        overlay.classList.remove('is-open');
+        overlay.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+      }
+      btn.addEventListener('click', open);
+      closeBtn.addEventListener('click', close);
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && overlay.classList.contains('is-open')) close();
+      });
+
+      function render(items, query){
+        if (!items.length) {
+          results.innerHTML = '<div class="bs-search-empty" style="padding:30px;">Ничего не нашлось' + (query ? ' по «' + escapeHtml(query) + '»' : '') + '</div>';
+          return;
+        }
+        results.innerHTML = items.map(r => {
+          const thumb = r.image_url ? 'style="background-image:url(\'' + r.image_url + '\');background-size:cover;background-position:center;"' : '';
+          const ended = r.status !== 'active';
+          return '<a class="bs-search-result' + (ended ? ' bs-search-status-ended' : '') + '" href="' + r.url + '">' +
+            '<div class="bs-search-thumb" ' + thumb + '></div>' +
+            '<div class="bs-search-info">' +
+              '<div class="bs-search-title">' + escapeHtml(r.title) + '</div>' +
+              '<div class="bs-search-sub">' + escapeHtml(r.artist || '') + ' · ' + escapeHtml(r.end_time_display || '') + (ended ? ' · завершён' : '') + '</div>' +
+            '</div>' +
+            '<div class="bs-search-price">$' + escapeHtml(r.current_price_usd) + '</div>' +
+          '</a>';
+        }).join('');
+      }
+
+      async function run(){
+        const q = input.value.trim();
+        const params = new URLSearchParams();
+        if (q) params.set('q', q);
+        if (activeCat && activeCat !== 'all') params.set('cat', activeCat);
+        if (maxPrice && maxPrice < 2000) params.set('max_price', String(maxPrice));
+        if (!q && activeCat === 'all' && maxPrice >= 2000) { results.innerHTML = ''; return; }
+        try {
+          const r = await fetch('/api/search?' + params.toString());
+          if (!r.ok) return;
+          const data = await r.json();
+          render(data.results || [], q);
+        } catch(e){}
+      }
+
+      input.addEventListener('input', () => {
+        clearTimeout(timer);
+        timer = setTimeout(run, 200);
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const first = results.querySelector('.bs-search-result');
+          if (first) first.click();
+          else if (input.value.trim().length >= 2) {
+            window.location.href = '/?q=' + encodeURIComponent(input.value.trim());
+          }
+        }
+      });
+
+      if (filtersBox) {
+        filtersBox.addEventListener('click', (e) => {
+          const chip = e.target.closest('.bs-mobile-filter-chip');
+          if (!chip) return;
+          filtersBox.querySelectorAll('.bs-mobile-filter-chip').forEach(c => c.classList.remove('is-active'));
+          chip.classList.add('is-active');
+          activeCat = chip.dataset.filterCat || 'all';
+          run();
+        });
+      }
+      if (priceRange) {
+        priceRange.addEventListener('input', () => {
+          maxPrice = Number(priceRange.value);
+          if (priceVal) priceVal.textContent = maxPrice >= 2000 ? '$2000+' : ('$' + maxPrice);
+        });
+        priceRange.addEventListener('change', run);
+      }
     })();
   </script>
 
@@ -599,7 +922,7 @@
         const pay = document.createElement('button');
         pay.type = 'button';
         pay.className = 'bs-toast-persistent-btn';
-        pay.textContent = '💳 Оплатить';
+        pay.innerHTML = '<iconify-icon icon="lucide:credit-card"></iconify-icon> Оплатить';
         pay.addEventListener('click', () => { window.location.href = '/me#payments'; });
         actions.appendChild(pay);
       }
@@ -607,7 +930,7 @@
         const ship = document.createElement('button');
         ship.type = 'button';
         ship.className = 'bs-toast-persistent-btn';
-        ship.textContent = '🎫 Отправить билет';
+        ship.innerHTML = '<iconify-icon icon="lucide:ticket"></iconify-icon> Отправить билет';
         ship.addEventListener('click', () => { window.location.href = '/sell#escrow'; });
         actions.appendChild(ship);
       }
@@ -619,7 +942,7 @@
         const got = document.createElement('button');
         got.type = 'button';
         got.className = 'bs-toast-persistent-btn';
-        got.textContent = '✅ Я получил товар';
+        got.innerHTML = '<iconify-icon icon="lucide:check-circle"></iconify-icon> Я получил товар';
         got.addEventListener('click', async () => {
           if (!n.payment_id) { window.location.href = '/me#payments'; return; }
           got.disabled = true;
@@ -633,12 +956,12 @@
             } else {
               const data = await r.json().catch(() => ({}));
               got.disabled = false;
-              got.textContent = '✅ Я получил товар';
+              got.innerHTML = '<iconify-icon icon="lucide:check-circle"></iconify-icon> Я получил товар';
               if (window.bidstageToast) window.bidstageToast(data.message || data.error || 'Не удалось подтвердить', 'error');
             }
           } catch (e) {
             got.disabled = false;
-            got.textContent = '✅ Я получил товар';
+            got.innerHTML = '<iconify-icon icon="lucide:check-circle"></iconify-icon> Я получил товар';
           }
         });
         actions.appendChild(got);

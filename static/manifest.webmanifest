@@ -1,0 +1,22 @@
+{
+  "name": "BidStage · Премиум аукцион билетов",
+  "short_name": "BidStage",
+  "description": "Аукцион концертных лотов, VIP-столов и бэкстейдж-моментов в реальном времени.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a0f",
+  "theme_color": "#0a0a0f",
+  "lang": "ru",
+  "icons": [
+    { "src": "/static/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/static/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "categories": ["entertainment", "shopping"],
+  "shortcuts": [
+    { "name": "Каталог", "short_name": "Каталог", "url": "/", "description": "Все активные аукционы" },
+    { "name": "Профиль", "short_name": "Профиль", "url": "/me", "description": "Мои ставки и баланс" },
+    { "name": "Чаты", "short_name": "Чаты", "url": "/chats", "description": "Сообщения" }
+  ]
+}

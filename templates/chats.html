@@ -3,9 +3,11 @@
 <main class="bs-messenger" data-current-user-id="{{ me.id if me else '' }}">
   <aside class="bs-messenger-sidebar">
     <div class="bs-messenger-header">
-      <div>
-        <p class="text-xs font-bold uppercase tracking-wider text-violet">💬 Сообщения</p>
-        <h1 class="heading mt-0.5 text-lg font-bold">Чаты</h1>
+      <div class="min-w-0">
+        <span class="hero-kicker" style="margin-bottom:0.3rem;"><span class="hero-kicker-bar"></span><span>Сообщения</span></span>
+        <h1 class="page-hero-title" style="font-size:clamp(1.2rem,2vw,1.5rem);justify-content:flex-start;">
+          <span class="hero-word-violet">Ча</span><span class="hero-word-gold">ты</span>
+        </h1>
       </div>
       <span class="pill pill-muted">{{ chats|length }}</span>
     </div>
@@ -18,7 +20,7 @@
       <div class="bs-chat-row {% if c.is_bot %}bs-chat-row-bot{% endif %}" data-chat-key="{{ c.lot_id }}-{{ c.peer_id }}" data-lot-id="{{ c.lot_id }}" data-peer-id="{{ c.peer_id }}" data-peer-username="{{ c.peer_username }}" data-lot-title="{{ c.lot_title }}" data-is-bot="{{ '1' if c.is_bot else '0' }}" data-search="{{ c.peer_username|lower }} {{ c.lot_title|lower }}">
         <div class="bs-chat-avatar-wrap">
           {% if c.is_bot %}
-          <div class="bs-chat-avatar-fallback bs-chat-avatar-bot" title="Служба BidStage">🤖</div>
+          <div class="bs-chat-avatar-fallback bs-chat-avatar-bot" title="Служба BidStage"><iconify-icon icon="lucide:bot"></iconify-icon></div>
           {% elif c.lot_image_url %}
           <img src="{{ c.lot_image_url }}" alt="" class="bs-chat-avatar" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
           <div class="bs-chat-avatar-fallback" style="display:none;">{{ c.peer_username[:2]|upper }}</div>
@@ -176,7 +178,7 @@
       const senderTag = document.createElement('div');
       senderTag.className = 'bs-chat-bot-tag';
       senderTag.style.marginBottom = '4px';
-      senderTag.textContent = '🤖 BidStage Поддержка';
+      senderTag.innerHTML = '<iconify-icon icon="lucide:bot"></iconify-icon> BidStage Поддержка';
       bubble.appendChild(senderTag);
     }
     const textNode = document.createElement('div');
@@ -322,7 +324,8 @@
     avaWrap.className = 'bs-chat-avatar-wrap';
     const ava = document.createElement('div');
     ava.className = isBot ? 'bs-chat-avatar-fallback bs-chat-avatar-bot' : 'bs-chat-avatar-fallback';
-    ava.textContent = isBot ? '🤖' : peerName.slice(0, 2).toUpperCase();
+    if (isBot) { ava.innerHTML = '<iconify-icon icon="lucide:bot"></iconify-icon>'; }
+    else { ava.textContent = peerName.slice(0, 2).toUpperCase(); }
     avaWrap.appendChild(ava);
     row.appendChild(avaWrap);
     const meta = document.createElement('div');
