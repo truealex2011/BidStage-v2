@@ -328,6 +328,12 @@
           <p class="font-semibold text-violet inline-flex items-center gap-1.5"><iconify-icon icon="lucide:user-check"></iconify-icon> Это ваш лот</p>
           <p class="text-xs text-muted mt-1">Продавец не может ставить на собственные лоты</p>
         </div>
+        <button type="button" id="owner-image-btn" class="btn btn-amber btn-block mt-3">
+          <iconify-icon icon="lucide:image-plus"></iconify-icon>
+          <span>{% if lot.image_url %}Заменить картинку{% else %}Загрузить картинку{% endif %}</span>
+        </button>
+        <input type="file" id="owner-image-input" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none;">
+        <p id="owner-image-status" class="mt-2 text-xs text-center text-muted hidden"></p>
         {% else %}
         <button type="button" disabled class="btn btn-ghost btn-block">Аукцион {% if lot.status == 'ended' %}завершён{% else %}неактивен{% endif %}</button>
         {% endif %}
@@ -1060,6 +1066,48 @@
       if (panel) panel.classList.remove('hidden');
     });
   });
+
+  /* Загрузка/замена картинки лота продавцом */
+  (function () {
+    const btn = document.getElementById('owner-image-btn');
+    const input = document.getElementById('owner-image-input');
+    const status = document.getElementById('owner-image-status');
+    if (!btn || !input) return;
+    btn.addEventListener('click', () => input.click());
+    input.addEventListener('change', async () => {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      if (file.size > 6 * 1024 * 1024) {
+        if (window.bidstageToast) window.bidstageToast('Файл больше 6 МБ', 'bad');
+        return;
+      }
+      btn.disabled = true;
+      const original = btn.innerHTML;
+      btn.innerHTML = '<iconify-icon icon="lucide:loader-2" class="animate-spin"></iconify-icon><span>Загружаем...</span>';
+      const fd = new FormData();
+      fd.append('image', file);
+      try {
+        const r = await fetch('/api/lot/' + LOT_ID + '/image', { method: 'POST', body: fd });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) {
+          if (window.bidstageToast) window.bidstageToast(d.message || 'Не удалось загрузить', 'bad');
+          btn.disabled = false;
+          btn.innerHTML = original;
+          return;
+        }
+        if (window.bidstageToast) window.bidstageToast('Картинка обновлена', 'good');
+        if (status) {
+          status.textContent = 'Перезагружаем страницу...';
+          status.classList.remove('hidden');
+        }
+        setTimeout(() => window.location.reload(), 700);
+      } catch (e) {
+        if (window.bidstageToast) window.bidstageToast('Сетевая ошибка', 'bad');
+        btn.disabled = false;
+        btn.innerHTML = original;
+      }
+    });
+  })();
 })();
 </script>
 {% endblock %}
