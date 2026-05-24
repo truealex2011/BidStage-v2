@@ -3,7 +3,7 @@
    - Для API всегда ходим в сеть
    - При новой версии — самообновление
 */
-const VERSION = 'bs-v1.0.3';
+const VERSION = 'bs-v1.0.4';
 const STATIC_CACHE = 'bs-static-' + VERSION;
 const RUNTIME_CACHE = 'bs-runtime-' + VERSION;
 
@@ -50,6 +50,12 @@ self.addEventListener('fetch', (event) => {
       url.pathname.startsWith('/socket.io') ||
       url.pathname.startsWith('/auth/') ||
       url.pathname.startsWith('/webhook/')) {
+    return;
+  }
+
+  // Картинки лотов — всегда сеть (это user-content, не кэшируем во избежание stale)
+  if (url.pathname.startsWith('/static/lot_images/') ||
+      url.pathname.startsWith('/lot-image/')) {
     return;
   }
 

@@ -67,6 +67,26 @@ def _bootstrap_database():
         conn.commit()
 
 
+def _cleanup_broken_images():
+    """Сброс битых ссылок image_url, указывающих на /static/lot_images/lot_*
+    которые могли потеряться при ребилде Amvera (картинки сохранялись в
+    эфемерной static-папке до миграции на /data/lot_images)."""
+    try:
+        with models.get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "UPDATE lots SET image_url = NULL "
+                    "WHERE image_url LIKE %s",
+                    ('/static/lot_images/lot\\_%',),
+                )
+                cleared = cur.rowcount
+            conn.commit()
+        if cleared:
+            logger.info('cleanup_broken_images cleared=%s', cleared)
+    except Exception as _e:
+        logger.warning('cleanup_broken_images failed: %s', _e)
+
+
 def _start_scheduler():
     scheduler = BackgroundScheduler(timezone='UTC')
     scheduler.add_job(lambda: payments.end_expired_lots(scheduler), 'interval', seconds=30, id='end_expired_lots')
@@ -82,6 +102,7 @@ socketio = create_socketio(app)
 # Bootstrap БД и шедулер на любом старте — нужно для запуска под gunicorn/replit
 try:
     _bootstrap_database()
+    _cleanup_broken_images()
 except Exception as _e:
     logger.exception('database bootstrap failed: %s', _e)
 

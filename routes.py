@@ -213,6 +213,17 @@ def service_worker():
     return response
 
 
+@bp.route('/lot-image/<path:filename>')
+def lot_image(filename):
+    """Отдача загруженных картинок лотов из persistent volume /data/lot_images/.
+    Если файл не найден там — fallback в static/lot_images/."""
+    persist = os.path.join('/data', 'lot_images')
+    if os.path.isfile(os.path.join(persist, filename)):
+        return send_from_directory(persist, filename)
+    fallback = os.path.join(os.path.dirname(__file__), 'static', 'lot_images')
+    return send_from_directory(fallback, filename)
+
+
 @bp.route('/manifest.webmanifest')
 def manifest():
     static_dir = os.path.join(os.path.dirname(__file__), 'static')
@@ -1291,19 +1302,42 @@ def api_lot_upload_image(lot_id):
     file.stream.seek(0)
     if size > 6 * 1024 * 1024:
         return jsonify({'error': 'too_large', 'message': 'Максимум 6 МБ'}), 400
-    upload_dir = os.path.join(os.path.dirname(__file__), 'static', 'lot_images')
+    # Сохраняем в /data (persistent volume Amvera) если он доступен,
+    # иначе в static/lot_images (локально). Отдаём через /lot-image/<filename>.
+    persist_root = '/data' if os.path.isdir('/data') and os.access('/data', os.W_OK) else None
+    if persist_root:
+        upload_dir = os.path.join(persist_root, 'lot_images')
+    else:
+        upload_dir = os.path.join(os.path.dirname(__file__), 'static', 'lot_images')
     if not os.path.isdir(upload_dir):
         os.makedirs(upload_dir, exist_ok=True)
     ext = '.' + filename.rsplit('.', 1)[-1]
     safe_name = 'lot_{}_{}{}'.format(lot_id, secrets.token_hex(6), ext)
     save_path = os.path.join(upload_dir, safe_name)
     file.save(save_path)
-    public_url = '/static/lot_images/{}'.format(safe_name)
+    if persist_root:
+        public_url = '/lot-image/{}'.format(safe_name)
+    else:
+        public_url = '/static/lot_images/{}'.format(safe_name)
     with models.get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute('UPDATE lots SET image_url = %s WHERE id = %s', (public_url, lot_id))
         conn.commit()
     return jsonify({'ok': True, 'image_url': public_url})
+
+
+@bp.route('/lot-image/<path:filename>')
+def serve_lot_image(filename):
+    """Отдаём картинки лотов из персистентного хранилища /data/lot_images.
+    Если /data недоступен (локально) — пробуем static/lot_images."""
+    persist_dir = '/data/lot_images'
+    if os.path.isdir(persist_dir):
+        try:
+            return send_from_directory(persist_dir, filename, max_age=3600)
+        except Exception:
+            pass
+    fallback = os.path.join(os.path.dirname(__file__), 'static', 'lot_images')
+    return send_from_directory(fallback, filename, max_age=3600)
 
 
 @bp.route('/api/rates')
